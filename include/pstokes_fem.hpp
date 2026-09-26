@@ -38,20 +38,20 @@ private:
     Logger logger;  ///< Logger object for logging messages
 
 public:
-    double rate_factor;  ///< Rate factor
-    double glen_exponent;  ///< Glen exponent
-    double eps_reg_2;  ///< Regularization term in Glen's flow law
+    FloatType rate_factor;  ///< Rate factor
+    FloatType glen_exponent;  ///< Glen exponent
+    FloatType eps_reg_2;  ///< Regularization term in Glen's flow law
     int fssa_version = FSSA_NONE;  ///< FSSA version to use by default
-    double fssa_param = 0.0;  ///< Free-surface stabilization parameter
+    FloatType fssa_param = 0.0;  ///< Free-surface stabilization parameter
     int gp_stress = 5;  ///< Gauss precision for stress block
     int gp_incomp = 5;  ///< Gauss precision for incompressibility block
     int gp_fssa_lhs = 5;  ///< Gauss precision for lhs FSSA
     int gp_fssa_rhs = 5;  ///< Gauss precision for rhs FSSA
     int gp_rhs = 5;  /// Gauss precision for rhs vector
 
-    std::function<double(double, double)> force_x;  ///< Body force in x
-    std::function<double(double, double)> force_z;  ///< Body force in z
-    std::function<double(double, double)> fssa_accum;  ///< Body force in z
+    std::function<FloatType(FloatType, FloatType)> force_x;  ///< Body force in x
+    std::function<FloatType(FloatType, FloatType)> force_z;  ///< Body force in z
+    std::function<FloatType(FloatType, FloatType)> fssa_accum;  ///< Body force in z
 
     /**
      * @brief Bitmask of domain IDs for applying Dirichlet boundary conditions on horizontal velocity (ux).
@@ -67,10 +67,10 @@ public:
      */
     int uz_dirichlet_bc_mask = 0;
 
-    std::vector<Eigen::Triplet<double>> lhs_coeffs;  ///< Left-hand side coefficients (stiffness matrix)
+    std::vector<Eigen::Triplet<FloatType>> lhs_coeffs;  ///< Left-hand side coefficients (stiffness matrix)
     int nof_pushed_elements = 0;  ///< Counter for the number of elements pushed during assembly
-    double picard_stol = 1e-8;  ///< Step tolerance for Picard iterations
-    double picard_max_iter = 100;  ///< Maximum number of Picard iterations
+    FloatType picard_stol = 1e-8;  ///< Step tolerance for Picard iterations
+    FloatType picard_max_iter = 100;  ///< Maximum number of Picard iterations
 
     StructuredMesh &u_mesh;  ///< Mesh for velocity field (horizontal and vertical)
     StructuredMesh &p_mesh;  ///< Mesh for pressure field
@@ -85,9 +85,9 @@ public:
     Eigen::VectorXi p_d2v;  ///< Pressure degrees of freedom mapping
     Eigen::VectorXi w_d2v;  ///< Mapping for the solution vector (unknowns)
 
-    Eigen::SparseMatrix<double> lhs_mat;  ///< Left-hand side system matrix
-    Eigen::VectorXd rhs_vec;  ///< Right-hand side force vector
-    Eigen::VectorXd w_vec;  ///< Solution vector
+    Eigen::SparseMatrix<FloatType> lhs_mat;  ///< Left-hand side system matrix
+    Eigen::VectorX<FloatType> rhs_vec;  ///< Right-hand side force vector
+    Eigen::VectorX<FloatType> w_vec;  ///< Solution vector
 
     /**
      * @brief Constructor for initializing the pStokesProblem with meshes for velocity and pressure.
@@ -101,11 +101,11 @@ public:
      * @param[in] p_mesh Reference to the mesh for pressure field.
      */
     pStokesProblem(
-        double rate_factor,
-        double glen_exponent,
-        double eps_reg_2,
-        std::function<double(double, double)> force_x,
-        std::function<double(double, double)> force_z,
+        FloatType rate_factor,
+        FloatType glen_exponent,
+        FloatType eps_reg_2,
+        std::function<FloatType(FloatType, FloatType)> force_x,
+        std::function<FloatType(FloatType, FloatType)> force_z,
         StructuredMesh &u_mesh,
         StructuredMesh &p_mesh
     );
@@ -153,16 +153,16 @@ public:
     /**
      * @brief Applies Dirichlet boundary conditions for a specific velocity component.
      * 
-     * @param[in] boundary_id The domain ID for the boundary on which the boundary condition is applied.
+     * @param[in] boundary_part The ID for the boundary part.
      * @param[in] velocity_component The velocity component to which the boundary condition is applied.
-     * @param[in] ub_func The function representing the Dirichlet boundary condition.
+     * @param[in] u_func The function representing the Dirichlet boundary condition.
      *
      * This function is scheduled for removal, but is kept around for compatibility with unit tests.
      */
     void apply_dirichlet_bc(
         const int boundary_part,
         const int velocity_component,
-        std::function<double(double, double)> ub_func
+        std::function<FloatType(FloatType, FloatType)> u_func
     );
 
     /**
@@ -170,7 +170,7 @@ public:
      * 
      * @param[in] threshold The coefficient magnitude below which entries are pruned.
      */
-    void prune_lhs(double threshold);
+    void prune_lhs(FloatType threshold);
 
     /**
      * @brief Solves the linear system Ax=b.

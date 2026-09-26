@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_mesh_pmat, *boost::unit_test::tolerance(1e-14))
     for (int id: element_ids) {
         std::string element = id == QUADRILATERAL ? "QUADRILATERAL" : id == TRIANGLE_RIGHT ? "TRIANGLE_RIGHT": "TRIANGLE_LEFT";
         StructuredMesh sm(nx, nz, deg, id);
-        Eigen::ArrayXX<double> pmat_adiff = (sm.pmat - p1_mesh_pmat_ref).array().abs();
+        Eigen::ArrayXX<FloatType> pmat_adiff = (sm.pmat - p1_mesh_pmat_ref).array().abs();
         BOOST_REQUIRE_EQUAL(sm.pmat.rows(), p1_mesh_pmat_ref.rows());
         BOOST_REQUIRE_EQUAL(sm.pmat.cols(), p1_mesh_pmat_ref.cols());
         BOOST_TEST_CHECK(
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(test_mesh_pmat, *boost::unit_test::tolerance(1e-14))
     for (int id: element_ids) {
         std::string element = id == QUADRILATERAL ? "QUADRILATERAL" : id == TRIANGLE_RIGHT ? "TRIANGLE_RIGHT": "TRIANGLE_LEFT";
         StructuredMesh sm(nx, nz, deg, id);
-        Eigen::ArrayXX<double> pmat_adiff = (sm.pmat - p2_mesh_pmat_ref).array().abs();
+        Eigen::ArrayXX<FloatType> pmat_adiff = (sm.pmat - p2_mesh_pmat_ref).array().abs();
         BOOST_REQUIRE_EQUAL(sm.pmat.rows(), p2_mesh_pmat_ref.rows());
         BOOST_REQUIRE_EQUAL(sm.pmat.cols(), p2_mesh_pmat_ref.cols());
         BOOST_TEST_CHECK(

@@ -61,8 +61,8 @@ StructuredMesh::StructuredMesh(int nx, int nz, int degree, int cell_type):
     _nof_dofs = (_hl+1)*(_vl+1);
 
     // Initialize matrices and vectors
-    pmat = Eigen::MatrixXd(_nof_dofs, 2);
-    pmat_unit_box = Eigen::MatrixXd(_nof_dofs, 2);
+    pmat = Eigen::MatrixX<FloatType>(_nof_dofs, 2);
+    pmat_unit_box = Eigen::MatrixX<FloatType>(_nof_dofs, 2);
     cmat = Eigen::MatrixXi(_nof_cells, _dofs_per_cell);
     dimat = Eigen::VectorXi(_nof_dofs);
     cimat = Eigen::VectorXi(_nof_cells);
@@ -89,13 +89,13 @@ StructuredMesh::StructuredMesh(int nx, int nz, int degree, int cell_type):
 void StructuredMesh::assemble_pmat()
 {
     // Generate linearly spaced values for the x and z ranges
-    Eigen::VectorXd xrange = Eigen::VectorXd::LinSpaced(_hl + 1, 0.0, 1.0);
-    Eigen::VectorXd zrange = Eigen::VectorXd::LinSpaced(_vl + 1, 0.0, 1.0);
+    Eigen::VectorX<FloatType> xrange = Eigen::VectorX<FloatType>::LinSpaced(_hl + 1, 0.0, 1.0);
+    Eigen::VectorX<FloatType> zrange = Eigen::VectorX<FloatType>::LinSpaced(_vl + 1, 0.0, 1.0);
 
     int dof = 0;
     // Iterate over each combination of z and x coordinates
-    for (double z : zrange) {
-        for (double x : xrange) {
+    for (FloatType z : zrange) {
+        for (FloatType x : xrange) {
             // Assign the calculated coordinates to the global position matrix
             pmat(dof, 0) = x;   // x-coordinate
             pmat(dof, 1) = z;   // z-coordinate
@@ -313,11 +313,11 @@ void StructuredMesh::assemble_cimat_quadrilateral()
 void StructuredMesh::assemble_dimat()
 {
     // Compute the width of the domain in the x-direction
-    double domain_width = pmat(Eigen::last, 0) - pmat(0, 0);
+    FloatType domain_width = pmat(Eigen::last, 0) - pmat(0, 0);
 
     // Tolerances for boundary identification based on mesh resolution
-    double xtol = domain_width * 1e-3 / _hl;
-    double ztol = 1e-3 / _vl;
+    FloatType xtol = domain_width * 1e-3 / _hl;
+    FloatType ztol = 1e-3 / _vl;
 
     // Iterate over all degrees of freedom (DOFs)
     for (int i = 0; i < _nof_dofs; ++i) {
@@ -369,19 +369,19 @@ void StructuredMesh::assemble_eimat()
     eimat = Eigen::MatrixXi::Zero(_nof_edges, dpe + 1);
 
     // Compute domain width in the x-direction
-    double domain_width = pmat(Eigen::last, 0) - pmat(0, 0);
+    FloatType domain_width = pmat(Eigen::last, 0) - pmat(0, 0);
 
     // Define tolerances for boundary identification
-    double xtol = domain_width * 1e-3 / _hl; 
-    double ztol = 1e-3 / _vl;
+    FloatType xtol = domain_width * 1e-3 / _hl; 
+    FloatType ztol = 1e-3 / _vl;
 
     // Classify edges based on the positions of the nodes
     for (int ei = 0; ei < emat.rows(); ++ei) {
         // Get the horizontal and vertical positions of the two nodes defining the edge
-        double x1 = pmat(emat(ei, 0), 0);
-        double z1 = pmat(emat(ei, 0), 1);
-        double x2 = pmat(emat(ei, 1), 0);
-        double z2 = pmat(emat(ei, 1), 1);
+        FloatType x1 = pmat(emat(ei, 0), 0);
+        FloatType z1 = pmat(emat(ei, 0), 1);
+        FloatType x2 = pmat(emat(ei, 1), 0);
+        FloatType z2 = pmat(emat(ei, 1), 1);
 
         // Check the boundary conditions for the edge and assign the appropriate ID
         if (z1 > 1.0 - ztol && z2 > 1.0 - ztol)
@@ -465,8 +465,8 @@ bool inline StructuredMesh::is_corner_dof(int vi)
 void StructuredMesh::compute_edge_normals_and_tangents()
 {
     // Initialize the edge_tangents and edge_normals matrices with zeros
-    edge_tangents = Eigen::MatrixXd::Zero(_nof_edges, 2);
-    edge_normals = Eigen::MatrixXd::Zero(_nof_edges, 2);
+    edge_tangents = Eigen::MatrixX<FloatType>::Zero(_nof_edges, 2);
+    edge_normals = Eigen::MatrixX<FloatType>::Zero(_nof_edges, 2);
 
     // Extract the indices of the boundary edges
     std::vector<int> boundary_einds = extract_edge_inds(MESH2D::BOUNDARY_ID);
@@ -490,8 +490,8 @@ void StructuredMesh::compute_edge_normals_and_tangents()
 void StructuredMesh::compute_dof_normals_and_tangents()
 {
     // Initialize the dof_tangents and dof_normals matrices with zeros
-    dof_tangents = Eigen::MatrixXd::Zero(_nof_dofs, 2);
-    dof_normals = Eigen::MatrixXd::Zero(_nof_dofs, 2);
+    dof_tangents = Eigen::MatrixX<FloatType>::Zero(_nof_dofs, 2);
+    dof_normals = Eigen::MatrixX<FloatType>::Zero(_nof_dofs, 2);
 
     // Compute normals/tangents for vertex dofs
     std::vector<int> boundary_einds = extract_edge_inds(MESH2D::BOUNDARY_ID);
@@ -607,10 +607,10 @@ std::vector<int> StructuredMesh::extract_dof_inds(int id)
     return dinds;
 }
 
-void StructuredMesh::extrude_x(double x0, double x1)
+void StructuredMesh::extrude_x(FloatType x0, FloatType x1)
 {
     // Create a vector of ones with the same size as the number of DOFs
-    Eigen::VectorXd ones = Eigen::VectorXd::Ones(pmat.rows());
+    Eigen::VectorX<FloatType> ones = Eigen::VectorX<FloatType>::Ones(pmat.rows());
 
     // Perform linear interpolation of x-coordinates between x0 and x1
     pmat(Eigen::all, 0) = (ones - pmat(Eigen::all, 0)) * x0 + pmat(Eigen::all, 0) * x1;
@@ -619,17 +619,17 @@ void StructuredMesh::extrude_x(double x0, double x1)
     compute_normals_and_tangents();
 }
 
-void StructuredMesh::extrude_x(const Eigen::VectorXd &xvec_p1)
+void StructuredMesh::extrude_x(const Eigen::VectorX<FloatType> &xvec_p1)
 {
     // Initialize the x_vec to store the extruded values
-    Eigen::VectorXd x_vec;
+    Eigen::VectorX<FloatType> x_vec;
 
     // For degree 1 elements, use the input vector directly
     if (_degree == 1)
         x_vec = xvec_p1;
     // For degree 2 elements, expand the vector and interpolate internal nodes
     else if (_degree == 2) {
-        x_vec = Eigen::VectorXd::Zero(_hl + 1);
+        x_vec = Eigen::VectorX<FloatType>::Zero(_hl + 1);
 
         // Copy the input vector values at every second position in x_vec
         x_vec(Eigen::seq(0, Eigen::last, 2)) = xvec_p1;
@@ -654,40 +654,40 @@ void StructuredMesh::extrude_x(const Eigen::VectorXd &xvec_p1)
 }
 
 void StructuredMesh::extrude_z(
-    std::function<double (double)> zb_expr,
-    std::function<double (double)> zs_expr
+    std::function<FloatType (FloatType)> zb_expr,
+    std::function<FloatType (FloatType)> zs_expr
 )
 {
     // Extract indices of surface vertices
     std::vector<int> surf_vert_inds = extract_vertex_dof_inds(MESH2D::SURFACE_ID);
 
     // Get the x-coordinates of surface vertices
-    Eigen::VectorXd xvec_p1 = pmat(surf_vert_inds, 0);
+    Eigen::VectorX<FloatType> xvec_p1 = pmat(surf_vert_inds, 0);
 
     // Compute bottom and top surface elevations using the provided functions
-    Eigen::VectorXd zb_vec_p1 = xvec_p1.unaryExpr(zb_expr);
-    Eigen::VectorXd zs_vec_p1 = xvec_p1.unaryExpr(zs_expr);
+    Eigen::VectorX<FloatType> zb_vec_p1 = xvec_p1.unaryExpr(zb_expr);
+    Eigen::VectorX<FloatType> zs_vec_p1 = xvec_p1.unaryExpr(zs_expr);
 
     // Perform the extrusion using the computed surface elevations
     extrude_z(zb_vec_p1, zs_vec_p1);
 }
 
-void StructuredMesh::extrude_z(const Eigen::VectorXd &zs_vec_p1)
+void StructuredMesh::extrude_z(const Eigen::VectorX<FloatType> &zs_vec_p1)
 {
     // Extract the z-coordinates of the bedrock surface from the current mesh
     std::vector<int> bed_vert_inds = extract_vertex_dof_inds(MESH2D::BED_ID);
-    Eigen::VectorXd zb_vec_p1 = pmat(bed_vert_inds, 1);
+    Eigen::VectorX<FloatType> zb_vec_p1 = pmat(bed_vert_inds, 1);
 
     // Call the main extrude_z function with the existing bottom surface and new top surface
     extrude_z(zb_vec_p1, zs_vec_p1);
 }
 
 void StructuredMesh::extrude_z(
-    const Eigen::VectorXd &zb_vec_p1, const Eigen::VectorXd &zs_vec_p1
+    const Eigen::VectorX<FloatType> &zb_vec_p1, const Eigen::VectorX<FloatType> &zs_vec_p1
 )
 {
-    Eigen::VectorXd zb_vec_p2 = Eigen::VectorXd::Zero(_hl+1);
-    Eigen::VectorXd zs_vec_p2 = Eigen::VectorXd::Zero(_hl+1);
+    Eigen::VectorX<FloatType> zb_vec_p2 = Eigen::VectorX<FloatType>::Zero(_hl+1);
+    Eigen::VectorX<FloatType> zs_vec_p2 = Eigen::VectorX<FloatType>::Zero(_hl+1);
 
     // Precalculate displacement of surface and bedrock
     int k = 0;
@@ -700,7 +700,7 @@ void StructuredMesh::extrude_z(
     for (int i = 0; i < _vl+1; i+=_degree) {
         for (int j = 0; j < _hl+1; j+=_degree) {
             int vi = i*(_hl+1) + j;
-            double z = pmat_unit_box(vi, 1);
+            FloatType z = pmat_unit_box(vi, 1);
             pmat(vi, 1) = (1.0-z)*zb_vec_p2(v2b_map(vi)) + z*zs_vec_p2(v2b_map(vi));
         }
     }
@@ -819,12 +819,12 @@ int StructuredMesh::degree()
     return _degree;
 }
 
-double StructuredMesh::area()
+FloatType StructuredMesh::area()
 {
     // Declare matrices and vectors for storing node coordinates, quadrature points,
     // Lagrange basis functions, derivatives, and other intermediate results.
-    Eigen::MatrixXd node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
     // Perform Gauss-Legendre quadrature to obtain the quadrature points and weights
@@ -839,12 +839,12 @@ double StructuredMesh::area()
     );
 
     // Initialize the Jacobian determinant vector and quadrature points in physical coordinates.
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), dofs_per_cell());
 
     // Initialize the total area to zero.
-    double _area = 0.0;
+    FloatType _area = 0.0;
 
     // Iterate over all cells in the mesh (cmat contains the connectivity matrix of the mesh).
     for (int k = 0; k < cmat.rows(); ++k) {
@@ -860,7 +860,7 @@ double StructuredMesh::area()
 
         // For each quadrature point, accumulate the contribution to the area.
         for (int q = 0; q < qpoints_rs.rows(); ++q) {
-            _area += fabs(detJ_rs(q)) * qweights(q); // Add the area contribution from this quadrature point.
+            _area += ABS_FUNC(detJ_rs(q)) * qweights(q); // Add the area contribution from this quadrature point.
         }
     }
 

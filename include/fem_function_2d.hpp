@@ -36,7 +36,7 @@
  */
 class FEMFunction2D {
 private:
-    Eigen::SparseMatrix<double> M; /**< Sparse mass matrix */
+    Eigen::SparseMatrix<FloatType> M; /**< Sparse mass matrix */
     bool mass_mat_is_assembled = false; /**< Flag indicating whether mass matrix is assembled */
 
 public:
@@ -52,21 +52,21 @@ public:
     explicit FEMFunction2D(StructuredMesh &mesh);
 
     StructuredMesh &mesh; /**< Reference to the structured mesh */
-    Eigen::VectorXd vals; /**< Vector of function values at each degree of freedom (DOF) */
+    Eigen::VectorX<FloatType> vals; /**< Vector of function values at each degree of freedom (DOF) */
 
     /**
      * @brief Assigns a function to the FEMFunction2D object.
      * 
      * @param[in] func The function to assign to the FEMFunction2D.
      */
-    void assign(std::function<double(double, double)> func);
+    void assign(std::function<FloatType(FloatType, FloatType)> func);
 
     /**
      * @brief Assigns a vector of values to the FEMFunction2D object.
      * 
      * @param[in] vec The vector of values to assign.
      */
-    void assign(const Eigen::VectorXd &vec);
+    void assign(const Eigen::VectorX<FloatType> &vec);
 
     /**
      * @brief Assigns another FEMFunction2D object to this one.
@@ -82,7 +82,7 @@ public:
      * @param[in] z The z-coordinate.
      * @return The function value at the (x, z) point.
      */
-    double eval(double x, double z);
+    FloatType eval(FloatType x, FloatType z);
 
     /**
      * @brief Evaluates the function over a specified cell.
@@ -90,7 +90,7 @@ public:
      * @param[in] cell_index The index of the cell to evaluate.
      * @return Vector of function values for the cell.
      */
-    Eigen::VectorXd eval_cell(int cell_index);
+    Eigen::VectorX<FloatType> eval_cell(int cell_index);
 
     /**
      * @brief Evaluates the function over a specified edge.
@@ -98,7 +98,7 @@ public:
      * @param[in] edge_index The index of the edge to evaluate.
      * @return Vector of function values for the edge.
      */
-    Eigen::VectorXd eval_edge(int edge_index);
+    Eigen::VectorX<FloatType> eval_edge(int edge_index);
 
     /**
      * @brief Extracts a subvector corresponding to a vertex.
@@ -106,7 +106,7 @@ public:
      * @param[in] domain_id The domain ID for the vertex.
      * @return Matrix of extracted subvector values.
      */
-    Eigen::MatrixXd extract_vertex_subvec(int domain_id);
+    Eigen::MatrixX<FloatType> extract_vertex_subvec(int domain_id);
 
     /**
      * @brief Extracts a subvector corresponding to a degree of freedom (DOF).
@@ -114,7 +114,7 @@ public:
      * @param[in] domain_id The domain ID for the DOF.
      * @return Matrix of extracted subvector values.
      */
-    Eigen::MatrixXd extract_dof_subvec(int domain_id);
+    Eigen::MatrixX<FloatType> extract_dof_subvec(int domain_id);
 
     /**
      * @brief Assembles the mass matrix for the FEM function, used for L2 norm calculation
@@ -125,7 +125,7 @@ public:
      * @brief Set preassembled mass matrix for the FEM function, used for L2 norm calculation
      * @param[in] M The mass matrix in sparse format
      */
-    void set_mass_matrix(Eigen::SparseMatrix<double> &M);
+    void set_mass_matrix(Eigen::SparseMatrix<FloatType> &M);
 
     /**
      * @brief Computes the derivative of the function in the x-direction (interpolated).
@@ -160,7 +160,7 @@ public:
      * 
      * @return The sparse mass matrix.
      */
-    Eigen::SparseMatrix<double> mass_matrix();
+    Eigen::SparseMatrix<FloatType> mass_matrix();
 
     /**
     * @brief Computes the L2 norm of the function.
@@ -172,9 +172,9 @@ public:
     * 
     * @throws std::runtime_error if the mass matrix has not been assembled.
     * 
-    * @return The L2 norm of the function as a value of type `double`.
+    * @return The L2 norm of the function as a value of type `FloatType`.
     */
-    double L2_norm();
+    FloatType L2_norm();
 
     /**
      * @brief Function call operator for evaluating the function at a given point.
@@ -183,7 +183,7 @@ public:
      * @param[in] z The z-coordinate.
      * @return The function value at the (x, z) point.
      */
-    double operator()(double x, double z);
+    FloatType operator()(FloatType x, FloatType z);
 
     /**
      * @brief Adds another FEM function to the current FEM function and returns the result.
@@ -197,7 +197,7 @@ public:
      * @return A new FEM function representing the result of the element-wise addition of the current
      *         FEM function and the input FEM function `f`.
      */
-    FEMFunction2D operator+(double val);
+    FEMFunction2D operator+(FloatType val);
 
     /**
      * @brief Subtracts a constant value from the FEM function and returns the result.
@@ -209,7 +209,7 @@ public:
      * 
      * @return A new FEM function representing the result of subtracting `val` from the current function.
      */
-    FEMFunction2D operator-(double val);
+    FEMFunction2D operator-(FloatType val);
 
     /**
      * @brief Multiplies the FEM function by a constant value and returns the result.
@@ -221,7 +221,7 @@ public:
      * 
      * @return A new FEM function representing the result of multiplying the current function by `val`.
      */
-    FEMFunction2D operator*(double val);
+    FEMFunction2D operator*(FloatType val);
 
     /**
      * @brief Adds another FEM function to the current FEM function and returns the result.

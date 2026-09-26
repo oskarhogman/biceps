@@ -48,17 +48,17 @@ public:
 
     StructuredMesh &mesh; ///< Reference to the structured mesh.
 
-    std::vector<Eigen::Triplet<double>> lhs_coeffs; ///< Storage for triplet coefficients of the system matrix.
+    std::vector<Eigen::Triplet<FloatType>> lhs_coeffs; ///< Storage for triplet coefficients of the system matrix.
 
-    Eigen::SparseMatrix<double> lhs_mat; ///< Global left-hand-side (LHS) matrix.
-    Eigen::SparseMatrix<double> lhs_mat_free; ///< LHS matrix for free degrees of freedom.
-    Eigen::SparseMatrix<double> lhs_mat_fixed; ///< LHS matrix for fixed degrees of freedom.
+    Eigen::SparseMatrix<FloatType> lhs_mat; ///< Global left-hand-side (LHS) matrix.
+    Eigen::SparseMatrix<FloatType> lhs_mat_free; ///< LHS matrix for free degrees of freedom.
+    Eigen::SparseMatrix<FloatType> lhs_mat_fixed; ///< LHS matrix for fixed degrees of freedom.
 
-    Eigen::VectorXd bc_vec; ///< Vector containing boundary condition values.
-    Eigen::VectorXd rhs_vec; ///< Right-hand-side (RHS) vector of the system.
-    Eigen::VectorXd rhs_vec_free; ///< RHS vector restricted to free DOFs.
-    Eigen::VectorXd sol_vec_free; ///< Solution vector for free DOFs.
-    Eigen::VectorXd sol_vec; ///< Complete solution vector.
+    Eigen::VectorX<FloatType> bc_vec; ///< Vector containing boundary condition values.
+    Eigen::VectorX<FloatType> rhs_vec; ///< Right-hand-side (RHS) vector of the system.
+    Eigen::VectorX<FloatType> rhs_vec_free; ///< RHS vector restricted to free DOFs.
+    Eigen::VectorX<FloatType> sol_vec_free; ///< Solution vector for free DOFs.
+    Eigen::VectorX<FloatType> sol_vec; ///< Complete solution vector.
 
     /**
      * @brief Assembles the stiffness matrix using given material properties.
@@ -67,8 +67,8 @@ public:
      * @param gp Number of Gauss points used for integration.
      */
     void assemble_stiffness_block(
-        std::function<double(double, double)> alpha,
-        std::function<double(double, double)> beta,
+        std::function<FloatType(FloatType, FloatType)> alpha,
+        std::function<FloatType(FloatType, FloatType)> beta,
         int gp
     );
 
@@ -78,7 +78,7 @@ public:
      * @param gauss_precision Number of Gauss points used for integration.
      */
     void assemble_mass_block(
-        std::function<double(double, double)> gamma,
+        std::function<FloatType(FloatType, FloatType)> gamma,
         int gauss_precision
     );
 
@@ -91,9 +91,9 @@ public:
      * @param gauss_precision Number of Gauss points used for integration.
      */
     void assemble_robin_block(
-        std::function<double(double, double)> a_robin,
-        std::function<double(double, double)> b_robin,
-        std::function<double(double, double)> g_robin,
+        std::function<FloatType(FloatType, FloatType)> a_robin,
+        std::function<FloatType(FloatType, FloatType)> b_robin,
+        std::function<FloatType(FloatType, FloatType)> g_robin,
         int boundary_id,
         int gauss_precision
     );
@@ -109,7 +109,7 @@ public:
      * @param gauss_precision Number of Gauss points used for integration.
      */
     void assemble_force_rhs(
-        std::function<double(double, double)> f,
+        std::function<FloatType(FloatType, FloatType)> f,
         int gauss_precision
     );
 
@@ -127,7 +127,7 @@ public:
      * @param gauss_precision Number of Gauss points used for integration.
      */
     void assemble_neumann_rhs(
-        std::function<double(double, double)> g_neumann,
+        std::function<FloatType(FloatType, FloatType)> g_neumann,
         int boundary_id,
         int gauss_precision
     );
@@ -140,8 +140,8 @@ public:
      * @param gauss_precision Number of Gauss points used for integration.
      */
     void assemble_robin_rhs(
-        std::function<double(double, double)> b_robin,
-        std::function<double(double, double)> g_robin,
+        std::function<FloatType(FloatType, FloatType)> b_robin,
+        std::function<FloatType(FloatType, FloatType)> g_robin,
         int boundary_id,
         int gauss_precision
     );
@@ -152,7 +152,7 @@ public:
      * @param boundary_id Identifier for the boundary segment.
      */
     void apply_dirichlet_bc(
-        std::function<double(double, double)> g_dirichlet,
+        std::function<FloatType(FloatType, FloatType)> g_dirichlet,
         int boundary_id
     );
 

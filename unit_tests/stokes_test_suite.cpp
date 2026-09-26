@@ -23,25 +23,25 @@
 
 BOOST_AUTO_TEST_CASE(test_fluctuating_flow)
 {
-    double eta_cavity = 1.0;
-    double A = 1.0/(2.0*eta_cavity);
-    double n_i = 1.0;
-    double eps_reg_2 = 1e-10;
-    Eigen::MatrixXd xz_ux_mat, xz_uz_mat, xz_p_mat;
-    Eigen::VectorXd X_vec, Z_vec, UX_vec, UZ_vec,
+    FloatType eta_cavity = 1.0;
+    FloatType A = 1.0/(2.0*eta_cavity);
+    FloatType n_i = 1.0;
+    FloatType eps_reg_2 = 1e-10;
+    Eigen::MatrixX<FloatType> xz_ux_mat, xz_uz_mat, xz_p_mat;
+    Eigen::VectorX<FloatType> X_vec, Z_vec, UX_vec, UZ_vec,
         P_vec, UX_vec_ref, UZ_vec_ref;
 
     populate_manufactured_sol_cases();
 
     for (
-        std::tuple<int, int, int, double, double> test_case:
+        std::tuple<int, int, int, FloatType, FloatType> test_case:
         test_manufactured_sol_cases
     ) {
         int nx = std::get<0>(test_case);
         int nz = std::get<1>(test_case);
         int cell_type = std::get<2>(test_case);
-        double error_ux_tol = std::get<3>(test_case);
-        double error_uz_tol = std::get<4>(test_case);
+        FloatType error_ux_tol = std::get<3>(test_case);
+        FloatType error_uz_tol = std::get<4>(test_case);
         StructuredMesh u_mesh(nx, nz, 2, cell_type);
         StructuredMesh p_mesh(nx, nz, 1, cell_type);
         pStokesProblem psp(A, n_i, eps_reg_2, force_x, force_z, u_mesh, p_mesh);
@@ -81,15 +81,15 @@ BOOST_AUTO_TEST_CASE(test_fluctuating_flow)
         UZ_vec = xz_uz_mat(Eigen::all, 2);
         P_vec = xz_p_mat(Eigen::all, 2);
 
-        UX_vec_ref = Eigen::VectorXd::Zero(UX_vec.size());
-        UZ_vec_ref = Eigen::VectorXd::Zero(UZ_vec.size());
+        UX_vec_ref = Eigen::VectorX<FloatType>::Zero(UX_vec.size());
+        UZ_vec_ref = Eigen::VectorX<FloatType>::Zero(UZ_vec.size());
         for (int i = 0; i < X_vec.size(); ++i) {
             UX_vec_ref(i) = ux_func(X_vec(i), Z_vec(i));
             UZ_vec_ref(i) = uz_func(X_vec(i), Z_vec(i));
         }
 
-        double error_ux_inf_norm = (UX_vec_ref - UX_vec).cwiseAbs().maxCoeff();
-        double error_uz_inf_norm = (UZ_vec_ref - UZ_vec).cwiseAbs().maxCoeff();
+        FloatType error_ux_inf_norm = (UX_vec_ref - UX_vec).cwiseAbs().maxCoeff();
+        FloatType error_uz_inf_norm = (UZ_vec_ref - UZ_vec).cwiseAbs().maxCoeff();
         BOOST_TEST_CHECK(
             error_ux_inf_norm < error_ux_tol,
             (boost::format{"Stokes velocity X error test for StructuredMesh(nx=%d, nz=%d, degree=P2P1, cell_type=%s) failed: ||error_ux||_inf = %g > %g"}

@@ -22,10 +22,11 @@
 
 #include <boost/test/unit_test.hpp>
 #include <Eigen/Dense>
+#include <float_type.hpp>
 
 // pmat for nx=3, nz=2, d=1
-static Eigen::MatrixXd p1_mesh_pmat_ref = (
-    Eigen::MatrixXd(12, 2) <<
+static Eigen::MatrixX<FloatType> p1_mesh_pmat_ref = (
+    Eigen::MatrixX<FloatType>(12, 2) <<
     0.0,     0.0,
     1.0/3.0, 0.0,
     2.0/3.0, 0.0,
@@ -43,8 +44,8 @@ static Eigen::MatrixXd p1_mesh_pmat_ref = (
 ).finished();
 
 // pmat for nx=3, nz=2, d=2
-static Eigen::MatrixXd p2_mesh_pmat_ref = (
-    Eigen::MatrixXd(35, 2) <<
+static Eigen::MatrixX<FloatType> p2_mesh_pmat_ref = (
+    Eigen::MatrixX<FloatType>(35, 2) <<
         0.0,     0.0,
         1.0/6.0, 0.0,
         2.0/6.0, 0.0,

@@ -21,6 +21,7 @@
 
 #include <fem_function_2d.hpp>
 #include <structured_mesh.hpp>
+#include <float_type.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
@@ -43,8 +44,8 @@ namespace FEM2D {
     void gauss_legendre_quadrature(
         const int precision,
         const int cell_type,
-        Eigen::MatrixXd &points_ret,
-        Eigen::VectorXd &weights_ret
+        Eigen::MatrixX<FloatType> &points_ret,
+        Eigen::VectorX<FloatType> &weights_ret
     );
 
     /**
@@ -58,9 +59,9 @@ namespace FEM2D {
      * @param[out] qpoints_xz_ret The quadrature points in physical space.
      */
     void map_rs_to_xz(
-        Eigen::MatrixXd &node_coords,
-        Eigen::MatrixXd &qpoints_rs,
-        Eigen::MatrixXd &qpoints_xz_ret
+        Eigen::MatrixX<FloatType> &node_coords,
+        Eigen::MatrixX<FloatType> &qpoints_rs,
+        Eigen::MatrixX<FloatType> &qpoints_xz_ret
     );
 
     /**
@@ -74,9 +75,9 @@ namespace FEM2D {
      * @param[out] qpoints_rs_ret The quadrature points in reference space.
      */
     void map_xz_to_rs(
-        Eigen::MatrixXd &node_coords,
-        Eigen::MatrixXd &qpoints_xz,
-        Eigen::MatrixXd &qpoints_rs_ret
+        Eigen::MatrixX<FloatType> &node_coords,
+        Eigen::MatrixX<FloatType> &qpoints_xz,
+        Eigen::MatrixX<FloatType> &qpoints_rs_ret
     );
 
     /**
@@ -94,9 +95,9 @@ namespace FEM2D {
     void lagrange_basis(
         const int degree,
         const int cell_type,
-        Eigen::MatrixXd &qpoints_rs,
-        Eigen::MatrixXd &phi_rs_ret,
-        Eigen::MatrixXd &grad_phi_rs_ret
+        Eigen::MatrixX<FloatType> &qpoints_rs,
+        Eigen::MatrixX<FloatType> &phi_rs_ret,
+        Eigen::MatrixX<FloatType> &grad_phi_rs_ret
     );
 
     /**
@@ -118,13 +119,13 @@ namespace FEM2D {
     void map_to_reference_cell(
         const int degree, 
         const int cell_type,
-        const Eigen::MatrixXd &node_coords,
-        const Eigen::MatrixXd &qpoints_rs,
-        const Eigen::MatrixXd &phi_rs,
-        const Eigen::MatrixXd &grad_phi_rs,
-        Eigen::VectorXd &detJ_rs_ret,
-        Eigen::MatrixXd &qpoints_xz_ret,
-        Eigen::MatrixXd &grad_phi_xz_ret
+        const Eigen::MatrixX<FloatType> &node_coords,
+        const Eigen::MatrixX<FloatType> &qpoints_rs,
+        const Eigen::MatrixX<FloatType> &phi_rs,
+        const Eigen::MatrixX<FloatType> &grad_phi_rs,
+        Eigen::VectorX<FloatType> &detJ_rs_ret,
+        Eigen::MatrixX<FloatType> &qpoints_xz_ret,
+        Eigen::MatrixX<FloatType> &grad_phi_xz_ret
     );
 
     /**
@@ -134,9 +135,9 @@ namespace FEM2D {
      *
      * @param[in] cell_type The type of the cell (e.g., triangle, quadrilateral).
      * @param[in] degree The degree of the polynomial (number of quadrature points).
-     * @return Eigen::MatrixXd The quadrature points in reference space.
+     * @return Eigen::MatrixX<FloatType> The quadrature points in reference space.
      */
-    Eigen::MatrixXd reference_element_points_rs(int cell_type, int degree);
+    Eigen::MatrixX<FloatType> reference_element_points_rs(int cell_type, int degree);
 
     /**
      * @brief Assembles the mass matrix for a 2D FEM problem.
@@ -146,9 +147,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh containing the finite element data.
      * @param[in] gp The number of Gauss quadrature points to use.
-     * @return Eigen::SparseMatrix<double> The assembled sparse mass matrix.
+     * @return Eigen::SparseMatrix<FloatType> The assembled sparse mass matrix.
      */
-    Eigen::SparseMatrix<double> assemble_mass_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_mass_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -160,9 +161,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh representing the computational domain.
      * @param[in] gp The number of Gauss points used for numerical integration.
-     * @return Eigen::SparseMatrix<double> The assembled stiffness matrix.
+     * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix.
      */
-    Eigen::SparseMatrix<double> assemble_stiffness_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_stiffness_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -174,9 +175,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh representing the computational domain.
      * @param[in] gp The number of Gauss points used for numerical integration.
-     * @return Eigen::SparseMatrix<double> The assembled stiffness matrix in the xx-direction.
+     * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix in the xx-direction.
      */
-    Eigen::SparseMatrix<double> assemble_stiffness_xx_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_stiffness_xx_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -188,9 +189,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh representing the computational domain.
      * @param[in] gp The number of Gauss points used for numerical integration.
-     * @return Eigen::SparseMatrix<double> The assembled stiffness matrix in the zz-direction.
+     * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix in the zz-direction.
      */
-    Eigen::SparseMatrix<double> assemble_stiffness_zz_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_stiffness_zz_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -203,9 +204,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh representing the computational domain.
      * @param[in] gp The number of Gauss points used for numerical integration.
-     * @return Eigen::SparseMatrix<double> The assembled stiffness matrix in the x-direction.
+     * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix in the x-direction.
      */
-    Eigen::SparseMatrix<double> assemble_stiffness_x_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_stiffness_x_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -218,9 +219,9 @@ namespace FEM2D {
      *
      * @param[in] mesh The structured mesh representing the computational domain.
      * @param[in] gp The number of Gauss points used for numerical integration.
-     * @return Eigen::SparseMatrix<double> The assembled stiffness matrix in the z-direction.
+     * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix in the z-direction.
      */
-    Eigen::SparseMatrix<double> assemble_stiffness_z_matrix(
+    Eigen::SparseMatrix<FloatType> assemble_stiffness_z_matrix(
         StructuredMesh &mesh, int gp
     );
 
@@ -241,7 +242,7 @@ namespace FEM2D {
      * @param[in] force A function representing the force applied at each quadrature point in physical coordinates.
      * @param[in] gp The precision (number of quadrature points) used for Gauss-Legendre quadrature.
      * 
-     * @return Eigen::MatrixXd The assembled expansion matrix of size (nof_dofs x (nx+1)).
+     * @return Eigen::MatrixX<FloatType> The assembled expansion matrix of size (nof_dofs x (nx+1)).
      *         The matrix relates the DOFs to the mesh heights for the finite element system.
      *
      * @note The number of quadrature points is defined by the precision parameter `gp`. 
@@ -249,9 +250,9 @@ namespace FEM2D {
      *       The expansion matrix is assembled by evaluating the basis functions at each quadrature point 
      *       and accumulating the contributions of the force function.
      */
-    Eigen::MatrixXd assemble_expansion_matrix(
+    Eigen::MatrixX<FloatType> assemble_expansion_matrix(
         StructuredMesh &mesh,
-        std::function<double(double, double)> force,
+        std::function<FloatType(FloatType, FloatType)> force,
         int gp
     );
 
@@ -261,11 +262,11 @@ namespace FEM2D {
      * @param[in] u_vec First vector.
      * @param[in] M Sparse mass matrix.
      * @param[in] v_vec Second vector.
-     * @return double Inner product result.
+     * @return FloatType Inner product result.
      */
-    double inner(
-        const Eigen::VectorXd &u_vec,
-        const Eigen::SparseMatrix<double> &M,
-        const Eigen::VectorXd &v_vec
+    FloatType inner(
+        const Eigen::VectorX<FloatType> &u_vec,
+        const Eigen::SparseMatrix<FloatType> &M,
+        const Eigen::VectorX<FloatType> &v_vec
     );
 }

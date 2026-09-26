@@ -24,15 +24,15 @@
 void FEM2D::map_to_reference_cell(
     int degree, 
     int cell_type,
-    const Eigen::MatrixXd &node_coords,
-    const Eigen::MatrixXd &qpoints_rs,
-    const Eigen::MatrixXd &phi_rs,
-    const Eigen::MatrixXd &grad_phi_rs,
-    Eigen::VectorXd &detJ_rs_ret,
-    Eigen::MatrixXd &qpoints_xz_ret,
-    Eigen::MatrixXd &grad_phi_xz_ret
+    const Eigen::MatrixX<FloatType> &node_coords,
+    const Eigen::MatrixX<FloatType> &qpoints_rs,
+    const Eigen::MatrixX<FloatType> &phi_rs,
+    const Eigen::MatrixX<FloatType> &grad_phi_rs,
+    Eigen::VectorX<FloatType> &detJ_rs_ret,
+    Eigen::MatrixX<FloatType> &qpoints_xz_ret,
+    Eigen::MatrixX<FloatType> &grad_phi_xz_ret
 ) {
-    Eigen::Matrix2<double> dF;
+    Eigen::Matrix2<FloatType> dF;
     for (int i = 0; i < qpoints_rs.rows(); i++) {
         int j = 2*i;
 
@@ -54,9 +54,9 @@ void FEM2D::map_to_reference_cell(
 void FEM2D::lagrange_basis(
     int degree,
     int cell_type,
-    Eigen::MatrixXd &qpoints_rs,
-    Eigen::MatrixXd &phi_rs_ret,
-    Eigen::MatrixXd &grad_phi_rs_ret
+    Eigen::MatrixX<FloatType> &qpoints_rs,
+    Eigen::MatrixX<FloatType> &phi_rs_ret,
+    Eigen::MatrixX<FloatType> &grad_phi_rs_ret
 ) {
     int dofs_per_cell;
     if (cell_type == MESH2D::TRIANGLE_LEFT || cell_type == MESH2D::TRIANGLE_RIGHT) {
@@ -69,13 +69,13 @@ void FEM2D::lagrange_basis(
         );
     }
 
-    phi_rs_ret = Eigen::MatrixXd::Zero(qpoints_rs.rows(), dofs_per_cell);
-    grad_phi_rs_ret = Eigen::MatrixXd::Zero(qpoints_rs.rows() << 1, dofs_per_cell);
+    phi_rs_ret = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), dofs_per_cell);
+    grad_phi_rs_ret = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows() << 1, dofs_per_cell);
 
     for (int i = 0; i < qpoints_rs.rows(); i++) {
         int j = i << 1;
-        double r = qpoints_rs(i, 0);	
-        double s = qpoints_rs(i, 1);
+        FloatType r = qpoints_rs(i, 0);	
+        FloatType s = qpoints_rs(i, 1);
 
         if (cell_type == MESH2D::QUADRILATERAL && degree == 1) {
             phi_rs_ret(i, 0) = (1-r)*(1-s);
@@ -183,7 +183,7 @@ void FEM2D::lagrange_basis(
     }
 }
 
-Eigen::MatrixXd FEM2D::reference_element_points_rs(
+Eigen::MatrixX<FloatType> FEM2D::reference_element_points_rs(
     int cell_type,
     const int degree
 ) {
@@ -191,18 +191,18 @@ Eigen::MatrixXd FEM2D::reference_element_points_rs(
     if (cell_type == MESH2D::TRIANGLE_LEFT)
         cell_type = MESH2D::TRIANGLE_RIGHT;
     StructuredMesh mesh(1, 1, degree, cell_type);
-    Eigen::MatrixXd ref_coords = mesh.pmat(mesh.cmat.row(0), Eigen::all);
+    Eigen::MatrixX<FloatType> ref_coords = mesh.pmat(mesh.cmat.row(0), Eigen::all);
     return ref_coords;
 }
 
 void FEM2D::gauss_legendre_quadrature(
     const int precision,
     const int cell_type,
-    Eigen::MatrixXd &points,
-    Eigen::VectorXd &weights
+    Eigen::MatrixX<FloatType> &points,
+    Eigen::VectorX<FloatType> &weights
 ) {
-    points = Eigen::MatrixXd::Zero(precision*precision, 2);
-    weights = Eigen::VectorXd::Zero(precision*precision);
+    points = Eigen::MatrixX<FloatType>::Zero(precision*precision, 2);
+    weights = Eigen::VectorX<FloatType>::Zero(precision*precision);
 
     if (cell_type == MESH2D::QUADRILATERAL) {
         if (precision == 1) {
@@ -470,19 +470,19 @@ void FEM2D::gauss_legendre_quadrature(
     }
 }
 
-Eigen::SparseMatrix<double> FEM2D::assemble_mass_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_mass_matrix(
     StructuredMesh &mesh, int gp
 ) {
     // Vector to store the non-zero coefficients of the mass matrix
-    std::vector<Eigen::Triplet<double>> mat_coeffs;
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs;
 
     // Matrices and vectors for storing quadrature points, shape functions, and derivatives
-    Eigen::MatrixXd node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
     // Initialize the sparse mass matrix with appropriate dimensions
-    Eigen::SparseMatrix<double> M_sp_ret = Eigen::SparseMatrix<double>(mesh.nof_dofs(), mesh.nof_dofs());
+    Eigen::SparseMatrix<FloatType> M_sp_ret = Eigen::SparseMatrix<FloatType>(mesh.nof_dofs(), mesh.nof_dofs());
 
     // Compute Gauss-Legendre quadrature points and weights
     FEM2D::gauss_legendre_quadrature(
@@ -495,12 +495,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_mass_matrix(
     );
 
     // Initialize storage for determinant of Jacobian and transformed quadrature points
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local mass matrix block for each element
-    Eigen::MatrixXd M_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> M_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -520,7 +520,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_mass_matrix(
         // Compute the local mass matrix contribution for the element
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             // Compute the determinant of the Jacobian multiplied by quadrature weight
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
 
             // Compute the element mass matrix using shape function values
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
@@ -533,7 +533,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_mass_matrix(
         // Store the local mass matrix values in the triplet format for the sparse matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     M_block(i, j)
@@ -558,18 +558,18 @@ Eigen::SparseMatrix<double> FEM2D::assemble_mass_matrix(
  *
  * @param[in] mesh The structured mesh representing the computational domain.
  * @param[in] gp The number of Gauss points used for numerical integration.
- * @return Eigen::SparseMatrix<double> The assembled stiffness matrix.
+ * @return Eigen::SparseMatrix<FloatType> The assembled stiffness matrix.
  */
-Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_stiffness_matrix(
     StructuredMesh &mesh, int gp
 ) {
-    std::vector<Eigen::Triplet<double>> mat_coeffs; // Triplet list for sparse matrix construction
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs; // Triplet list for sparse matrix construction
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
-    Eigen::SparseMatrix<double> A_sp_ret = Eigen::SparseMatrix<double>(
+    Eigen::SparseMatrix<FloatType> A_sp_ret = Eigen::SparseMatrix<FloatType>(
         mesh.nof_dofs(), mesh.nof_dofs()
     );
 
@@ -586,12 +586,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_matrix(
         phi_rs, dphi_rs
     );
 
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local element stiffness matrix
-    Eigen::MatrixXd A_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> A_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -609,7 +609,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_matrix(
         // Compute local stiffness matrix contributions
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int w = 2 * q;
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     A_block(i, j) += (
@@ -622,7 +622,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_matrix(
         // Convert local matrix to sparse format and add to global stiffness matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     A_block(i, j)
@@ -637,16 +637,16 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_matrix(
     return A_sp_ret;
 }
 
-Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_xx_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_stiffness_xx_matrix(
     StructuredMesh &mesh, int gp
 ) {
-    std::vector<Eigen::Triplet<double>> mat_coeffs; // Triplet list for sparse matrix construction
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs; // Triplet list for sparse matrix construction
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
-    Eigen::SparseMatrix<double> A_sp_ret = Eigen::SparseMatrix<double>(
+    Eigen::SparseMatrix<FloatType> A_sp_ret = Eigen::SparseMatrix<FloatType>(
         mesh.nof_dofs(), mesh.nof_dofs()
     );
 
@@ -663,12 +663,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_xx_matrix(
         phi_rs, dphi_rs
     );
 
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local element stiffness matrix
-    Eigen::MatrixXd A_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> A_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -686,7 +686,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_xx_matrix(
         // Compute local stiffness matrix contributions
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int w = 2 * q;
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     A_block(i, j) += (
@@ -699,7 +699,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_xx_matrix(
         // Convert local matrix to sparse format and add to global stiffness matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     A_block(i, j)
@@ -714,16 +714,16 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_xx_matrix(
     return A_sp_ret;
 }
 
-Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_zz_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_stiffness_zz_matrix(
     StructuredMesh &mesh, int gp
 ) {
-    std::vector<Eigen::Triplet<double>> mat_coeffs; // Triplet list for sparse matrix construction
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs; // Triplet list for sparse matrix construction
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
-    Eigen::SparseMatrix<double> A_sp_ret = Eigen::SparseMatrix<double>(
+    Eigen::SparseMatrix<FloatType> A_sp_ret = Eigen::SparseMatrix<FloatType>(
         mesh.nof_dofs(), mesh.nof_dofs()
     );
 
@@ -740,12 +740,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_zz_matrix(
         phi_rs, dphi_rs
     );
 
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local element stiffness matrix
-    Eigen::MatrixXd A_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> A_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -763,7 +763,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_zz_matrix(
         // Compute local stiffness matrix contributions
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int w = 2*q + 1;
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     A_block(i, j) += (
@@ -776,7 +776,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_zz_matrix(
         // Convert local matrix to sparse format and add to global stiffness matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     A_block(i, j)
@@ -791,16 +791,16 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_zz_matrix(
     return A_sp_ret;
 }
 
-Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_x_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_stiffness_x_matrix(
     StructuredMesh &mesh, int gp
 ) {
-    std::vector<Eigen::Triplet<double>> mat_coeffs; // Triplet list for sparse matrix construction
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs; // Triplet list for sparse matrix construction
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
-    Eigen::SparseMatrix<double> Ax_sp_ret = Eigen::SparseMatrix<double>(
+    Eigen::SparseMatrix<FloatType> Ax_sp_ret = Eigen::SparseMatrix<FloatType>(
         mesh.nof_dofs(), mesh.nof_dofs()
     );
 
@@ -817,12 +817,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_x_matrix(
         phi_rs, dphi_rs
     );
 
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local element stiffness matrix
-    Eigen::MatrixXd Ax_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> Ax_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -840,7 +840,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_x_matrix(
         // Compute local stiffness matrix contributions
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int w = 2*q;
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     Ax_block(i, j) += (
@@ -853,7 +853,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_x_matrix(
         // Convert local matrix to sparse format and add to global stiffness matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     Ax_block(i, j)
@@ -868,16 +868,16 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_x_matrix(
     return Ax_sp_ret;
 }
 
-Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_z_matrix(
+Eigen::SparseMatrix<FloatType> FEM2D::assemble_stiffness_z_matrix(
     StructuredMesh &mesh, int gp
 ) {
-    std::vector<Eigen::Triplet<double>> mat_coeffs; // Triplet list for sparse matrix construction
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    std::vector<Eigen::Triplet<FloatType>> mat_coeffs; // Triplet list for sparse matrix construction
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
-    Eigen::SparseMatrix<double> Az_sp_ret = Eigen::SparseMatrix<double>(
+    Eigen::SparseMatrix<FloatType> Az_sp_ret = Eigen::SparseMatrix<FloatType>(
         mesh.nof_dofs(), mesh.nof_dofs()
     );
 
@@ -894,12 +894,12 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_z_matrix(
         phi_rs, dphi_rs
     );
 
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Local element stiffness matrix
-    Eigen::MatrixXd Az_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> Az_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -917,7 +917,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_z_matrix(
         // Compute local stiffness matrix contributions
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int w = 2*q + 1;
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     Az_block(i, j) += (
@@ -930,7 +930,7 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_z_matrix(
         // Convert local matrix to sparse format and add to global stiffness matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                mat_coeffs.push_back(Eigen::Triplet<double>(
+                mat_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i),
                     element(j),
                     Az_block(i, j)
@@ -945,18 +945,18 @@ Eigen::SparseMatrix<double> FEM2D::assemble_stiffness_z_matrix(
     return Az_sp_ret;
 }
 
-Eigen::MatrixXd FEM2D::assemble_expansion_matrix(
+Eigen::MatrixX<FloatType> FEM2D::assemble_expansion_matrix(
     StructuredMesh &mesh,
-    std::function<double(double, double)> force,
+    std::function<FloatType(FloatType, FloatType)> force,
     int gp
 ) {
     if (mesh.cell_type() != MESH2D::QUADRILATERAL)
         throw std::invalid_argument("FEM2D::assemble_expansion_matrix: Unsupported cell type: Only QUADRILATERAL is supported.");
 
     // Determine the horizontal extent of the mesh (Lx) based on the first column of mesh node coordinates
-    double x0 = mesh.pmat.col(0).minCoeff();
-    double x1 = mesh.pmat.col(0).maxCoeff();
-    double Lx = x1 - x0;  // Horizontal length of the mesh
+    FloatType x0 = mesh.pmat.col(0).minCoeff();
+    FloatType x1 = mesh.pmat.col(0).maxCoeff();
+    FloatType Lx = x1 - x0;  // Horizontal length of the mesh
 
     // Get the number of horizontal (nx) and vertical (nz) cells in the mesh
     int nx = mesh.nx();
@@ -964,12 +964,12 @@ Eigen::MatrixXd FEM2D::assemble_expansion_matrix(
 
     // Initialize the expansion matrix with zeroes; the size is (nof_dofs x (nx+1))
     // `nof_dofs` is the number of degrees of freedom, and (nx+1) corresponds to the number of columns
-    Eigen::MatrixXd expan_mat = Eigen::MatrixXd::Zero(mesh.nof_dofs(), nx+1);
+    Eigen::MatrixX<FloatType> expan_mat = Eigen::MatrixX<FloatType>::Zero(mesh.nof_dofs(), nx+1);
 
     // Define matrices and vectors for storing the quadrature points, basis functions, and their gradients
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element_v;
 
     // Retrieve quadrature points and weights in reference element
@@ -983,9 +983,9 @@ Eigen::MatrixXd FEM2D::assemble_expansion_matrix(
     );
 
     // Initialize vectors and matrices for transformation and calculation of Jacobian
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());  // Jacobian determinant
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);  // Physical quadrature points
-    dphi_xz = Eigen::MatrixXd::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());  // Gradient of phi in physical space
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());  // Jacobian determinant
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);  // Physical quadrature points
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());  // Gradient of phi in physical space
 
     // Iterate over the vertical layers (kr) and horizontal layers (kc) of the mesh
     int k = 0;
@@ -1006,12 +1006,12 @@ Eigen::MatrixXd FEM2D::assemble_expansion_matrix(
             // Loop over quadrature points in the current element
             for (int q = 0; q < qpoints_rs.rows(); q++) {
                 // Calculate the weighted force contribution at this quadrature point
-                double Wxf = force(
+                FloatType Wxf = force(
                     qpoints_xz(q, 0), qpoints_xz(q, 1)
                 ) * qweights(q) * Lx / (nx * nz);
 
                 // Get r-coordinate at the quadrature point (used in linear interpolation between layers)
-                double r = qpoints_rs(q, 0);
+                FloatType r = qpoints_rs(q, 0);
 
                 // Loop through the degrees of freedom (DOFs) for the current element and update the expansion matrix
                 for (int i = 0; i < mesh.dofs_per_cell(); i++) {
@@ -1027,10 +1027,10 @@ Eigen::MatrixXd FEM2D::assemble_expansion_matrix(
     return expan_mat;
 }
 
-double FEM2D::inner(
-    const Eigen::VectorXd &u_vec,
-    const Eigen::SparseMatrix<double> &M,
-    const Eigen::VectorXd &v_vec
+FloatType FEM2D::inner(
+    const Eigen::VectorX<FloatType> &u_vec,
+    const Eigen::SparseMatrix<FloatType> &M,
+    const Eigen::VectorX<FloatType> &v_vec
 ) {
     return u_vec.dot(M*v_vec);
 }

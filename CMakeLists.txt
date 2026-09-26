@@ -24,6 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
 set(ENABLE_PYTHON ON CACHE BOOL "Enable Python support")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Enable shared libs")
+set(USE_LONG_DOUBLE OFF CACHE BOOL "Whether to use long double")
 set(ENABLE_DOCS ON CACHE BOOL "Build documentation")
 set(DOXYGEN_HTML ON CACHE BOOL "Build html documentation")
 set(DOXYGEN_LATEX ON CACHE BOOL "Build tex documentation")
@@ -126,6 +127,7 @@ add_subdirectory(src)
 
 install(
     FILES 
+        ${CMAKE_BINARY_DIR}/float_type.hpp
         include/eigen_spmat_addons.hpp
         include/enums.hpp
         include/logger.hpp

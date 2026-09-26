@@ -41,13 +41,13 @@ namespace FEM1D {
      */
     void map_to_reference_cell(
         int degree, 
-        Eigen::MatrixXd &node_coords,
-        Eigen::VectorXd &qpoints_r,
-        Eigen::MatrixXd &phi_r,
-        Eigen::MatrixXd &grad_phi_r,
-        Eigen::VectorXd &detJ_r_ret,
-        Eigen::MatrixXd &qpoints_x_ret,
-        Eigen::MatrixXd &grad_phi_x_ret
+        Eigen::MatrixX<FloatType> &node_coords,
+        Eigen::VectorX<FloatType> &qpoints_r,
+        Eigen::MatrixX<FloatType> &phi_r,
+        Eigen::MatrixX<FloatType> &grad_phi_r,
+        Eigen::VectorX<FloatType> &detJ_r_ret,
+        Eigen::MatrixX<FloatType> &qpoints_x_ret,
+        Eigen::MatrixX<FloatType> &grad_phi_x_ret
     );
 
     /**
@@ -60,18 +60,18 @@ namespace FEM1D {
      */
     void lagrange_basis(
         const int degree,
-        Eigen::VectorXd &qpoints_r,
-        Eigen::MatrixXd &phi_r_ret,
-        Eigen::MatrixXd &grad_phi_r_ret
+        Eigen::VectorX<FloatType> &qpoints_r,
+        Eigen::MatrixX<FloatType> &phi_r_ret,
+        Eigen::MatrixX<FloatType> &grad_phi_r_ret
     );
 
     /**
      * @brief Returns the reference element points for a given degree.
      * 
      * @param[in] degree Polynomial degree of the basis functions.
-     * @return Eigen::MatrixXd Matrix of reference element points.
+     * @return Eigen::MatrixX<FloatType> Matrix of reference element points.
      */
-    Eigen::MatrixXd reference_element_points_rs(const int degree);
+    Eigen::MatrixX<FloatType> reference_element_points_rs(const int degree);
 
     /**
      * @brief Computes Gauss-Legendre quadrature points and weights.
@@ -82,8 +82,8 @@ namespace FEM1D {
      */
     void gauss_legendre_quadrature(
         const int precision,
-        Eigen::VectorXd &points,
-        Eigen::VectorXd &weights
+        Eigen::VectorX<FloatType> &points,
+        Eigen::VectorX<FloatType> &weights
     );
 
     /**
@@ -91,9 +91,9 @@ namespace FEM1D {
      * 
      * @param[in] mesh Interval mesh for the finite element method.
      * @param[in] gp Number of quadrature points.
-     * @return Eigen::SparseMatrix<double> Sparse mass matrix.
+     * @return Eigen::SparseMatrix<FloatType> Sparse mass matrix.
      */
-    Eigen::SparseMatrix<double> assemble_mass_matrix(IntervalMesh &mesh, int gp);
+    Eigen::SparseMatrix<FloatType> assemble_mass_matrix(IntervalMesh &mesh, int gp);
 
     /**
      * @brief Computes the inner product u^T * M * v.
@@ -101,11 +101,11 @@ namespace FEM1D {
      * @param[in] u_vec First vector.
      * @param[in] M Sparse mass matrix.
      * @param[in] v_vec Second vector.
-     * @return double Inner product result.
+     * @return FloatType Inner product result.
      */
-    double inner(
-        const Eigen::VectorXd &u_vec,
-        const Eigen::SparseMatrix<double> &M,
-        const Eigen::VectorXd &v_vec
+    FloatType inner(
+        const Eigen::VectorX<FloatType> &u_vec,
+        const Eigen::SparseMatrix<FloatType> &M,
+        const Eigen::VectorX<FloatType> &v_vec
     );
 };

@@ -92,8 +92,8 @@ BOOST_PYTHON_MODULE(biceps)
         .value("DOMAIN_ID", MESH2D::DOMAIN_ID);
 
     // Expose IntervalMesh
-    py::class_<IntervalMesh>("IntervalMesh", py::init<double, double, int, int>())
-        .def(py::init<const Eigen::MatrixXd &, int>())
+    py::class_<IntervalMesh>("IntervalMesh", py::init<FloatType, FloatType, int, int>())
+        .def(py::init<const Eigen::MatrixX<FloatType> &, int>())
         .def("extract_dof_inds", +[](IntervalMesh &self, int id) {
             return stdvec_to_eigvec<int>(self.extract_dof_inds(id));
         })
@@ -108,12 +108,12 @@ BOOST_PYTHON_MODULE(biceps)
 
     // Expose StructuredMesh
     py::class_<StructuredMesh>("StructuredMesh", py::init<int, int, int, int>())
-        .def("extrude_x", static_cast<void (StructuredMesh::*)(const Eigen::VectorXd&)>(&StructuredMesh::extrude_x))
-        .def("extrude_x", static_cast<void (StructuredMesh::*)(double, double)>(&StructuredMesh::extrude_x))
-        .def("extrude_z", static_cast<void (StructuredMesh::*)(const Eigen::VectorXd&)>(&StructuredMesh::extrude_z))
-        .def("extrude_z", static_cast<void (StructuredMesh::*)(const Eigen::VectorXd&, const Eigen::VectorXd&)>(&StructuredMesh::extrude_z))
+        .def("extrude_x", static_cast<void (StructuredMesh::*)(const Eigen::VectorX<FloatType>&)>(&StructuredMesh::extrude_x))
+        .def("extrude_x", static_cast<void (StructuredMesh::*)(FloatType, FloatType)>(&StructuredMesh::extrude_x))
+        .def("extrude_z", static_cast<void (StructuredMesh::*)(const Eigen::VectorX<FloatType>&)>(&StructuredMesh::extrude_z))
+        .def("extrude_z", static_cast<void (StructuredMesh::*)(const Eigen::VectorX<FloatType>&, const Eigen::VectorX<FloatType>&)>(&StructuredMesh::extrude_z))
         .def("extrude_z", +[](StructuredMesh &self, py::object zb, py::object zs) {
-            self.extrude_z(pyfunc_to_cppfunc<double, double>(zb), pyfunc_to_cppfunc<double, double>(zs));
+            self.extrude_z(pyfunc_to_cppfunc<FloatType, FloatType>(zb), pyfunc_to_cppfunc<FloatType, FloatType>(zs));
         })
         .def("extract_cell_inds", +[](StructuredMesh &self, int id) {
             return stdvec_to_eigvec<int>(self.extract_cell_inds(id));
@@ -144,9 +144,9 @@ BOOST_PYTHON_MODULE(biceps)
 
     // Expose FEMFunction1D
     py::class_<FEMFunction1D>("FEMFunction1D", py::init<IntervalMesh &>())
-        .def("assign", static_cast<void (FEMFunction1D::*)(const Eigen::VectorXd &)>(&FEMFunction1D::assign))
+        .def("assign", static_cast<void (FEMFunction1D::*)(const Eigen::VectorX<FloatType> &)>(&FEMFunction1D::assign))
         .def("assign", +[](FEMFunction1D &self, py::object f) {
-            self.assign(pyfunc_to_cppfunc<double, double, double>(f));
+            self.assign(pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(f));
         })
         .def("integrate", &FEMFunction1D::integrate)
         .def("eval_cell", &FEMFunction1D::eval_cell)
@@ -155,9 +155,9 @@ BOOST_PYTHON_MODULE(biceps)
         .def("assemble_mass_matrix", &FEMFunction1D::assemble_mass_matrix)
         .def("mass_matrix", &FEMFunction1D::mass_matrix)
         .def("L2_norm", &FEMFunction1D::L2_norm)
-        .def(py::self + double())
-        .def(py::self - double())
-        .def(py::self * double())
+        .def(py::self + FloatType())
+        .def(py::self - FloatType())
+        .def(py::self * FloatType())
         .def(py::self + py::self)
         .def(py::self - py::self)
         .def(py::self * py::self)
@@ -165,9 +165,9 @@ BOOST_PYTHON_MODULE(biceps)
 
     // Expose FEMFunction2D
     py::class_<FEMFunction2D>("FEMFunction2D", py::init<StructuredMesh &>())
-        .def("assign", static_cast<void (FEMFunction2D::*)(const Eigen::VectorXd &)>(&FEMFunction2D::assign))
+        .def("assign", static_cast<void (FEMFunction2D::*)(const Eigen::VectorX<FloatType> &)>(&FEMFunction2D::assign))
         .def("assign", +[](FEMFunction2D &self, py::object f) {
-            self.assign(pyfunc_to_cppfunc<double, double, double>(f));
+            self.assign(pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(f));
         })
         .def("eval_cell", &FEMFunction2D::eval_cell)
         .def("extract_vertex_subvec", &FEMFunction2D::extract_vertex_subvec)
@@ -179,9 +179,9 @@ BOOST_PYTHON_MODULE(biceps)
         .def("diff_x_proj", &FEMFunction2D::diff_x_interp)
         .def("diff_z_proj", &FEMFunction2D::diff_z_interp)
         .def("L2_norm", &FEMFunction2D::L2_norm)
-        .def(py::self + double())
-        .def(py::self - double())
-        .def(py::self * double())
+        .def(py::self + FloatType())
+        .def(py::self - FloatType())
+        .def(py::self * FloatType())
         .def(py::self + py::self)
         .def(py::self - py::self)
         .def(py::self * py::self)
@@ -191,48 +191,48 @@ BOOST_PYTHON_MODULE(biceps)
     py::class_<PoissonProblem>("PoissonProblem", py::init<StructuredMesh &>())
         .def("assemble_stiffness_block", +[](PoissonProblem &self, py::object alpha, py::object beta, int gp) {
             self.assemble_stiffness_block(
-                pyfunc_to_cppfunc<double, double, double>(alpha),
-                pyfunc_to_cppfunc<double, double, double>(beta),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(alpha),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(beta),
                 gp
             );
         })
         .def("assemble_mass_block", +[](PoissonProblem &self, py::object gamma, int gp) {
             self.assemble_mass_block(
-                pyfunc_to_cppfunc<double, double, double>(gamma), gp
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(gamma), gp
             );
         })
         .def("assemble_robin_block", +[](PoissonProblem &self, py::object a_robin, py::object b_robin, py::object g_robin, int boundary_id, int gp) {
             self.assemble_robin_block(
-                pyfunc_to_cppfunc<double, double, double>(a_robin),
-                pyfunc_to_cppfunc<double, double, double>(b_robin),
-                pyfunc_to_cppfunc<double, double, double>(g_robin),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(a_robin),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(b_robin),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(g_robin),
                 boundary_id,
                 gp
             );
         })
         .def("commit_lhs_mat", &PoissonProblem::commit_lhs_mat)
         .def("assemble_force_rhs", +[](PoissonProblem &self, py::object f, int gp) {
-            self.assemble_force_rhs(pyfunc_to_cppfunc<double, double, double>(f), gp);
+            self.assemble_force_rhs(pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(f), gp);
         })
         .def("assemble_force_rhs", static_cast<void (PoissonProblem::*)(FEMFunction2D &, int gp)>(&PoissonProblem::assemble_force_rhs))
         .def("assemble_neumann_rhs", +[](PoissonProblem &self, py::object g_neumann, int boundary_id, int gp) {
             self.assemble_neumann_rhs(
-                pyfunc_to_cppfunc<double, double, double>(g_neumann),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(g_neumann),
                 boundary_id,
                 gp
             );
         })
         .def("assemble_robin_rhs", +[](PoissonProblem &self, py::object b_robin, py::object g_robin, int boundary_id, int gp) {
             self.assemble_robin_rhs(
-                pyfunc_to_cppfunc<double, double, double>(b_robin),
-                pyfunc_to_cppfunc<double, double, double>(g_robin),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(b_robin),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(g_robin),
                 boundary_id,
                 gp
             );
         })
         .def("apply_dirichlet_bc", +[](PoissonProblem &self, py::object g_dirichlet, int boundary_id) {
             self.apply_dirichlet_bc(
-                pyfunc_to_cppfunc<double, double, double>(g_dirichlet),
+                pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(g_dirichlet),
                 boundary_id
             );
         })
@@ -255,9 +255,9 @@ BOOST_PYTHON_MODULE(biceps)
     .def(
         "__init__",
         py::make_constructor(
-            +[](double rate_factor,
-                double glen_exponent,
-                double eps_reg_2,
+            +[](FloatType rate_factor,
+                FloatType glen_exponent,
+                FloatType eps_reg_2,
                 py::object func_x,
                 py::object func_z,
                 StructuredMesh &u_mesh,
@@ -267,8 +267,8 @@ BOOST_PYTHON_MODULE(biceps)
                     rate_factor,
                     glen_exponent,
                     eps_reg_2,
-                    pyfunc_to_cppfunc<double, double, double>(func_x),
-                    pyfunc_to_cppfunc<double, double, double>(func_z),
+                    pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(func_x),
+                    pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(func_z),
                     u_mesh,
                     p_mesh
                 );
@@ -290,7 +290,7 @@ BOOST_PYTHON_MODULE(biceps)
         self.apply_dirichlet_bc(
             boundary_id,
             velocity_component,
-            pyfunc_to_cppfunc<double, double, double>(ub_func)
+            pyfunc_to_cppfunc<FloatType, FloatType, FloatType>(ub_func)
         );
     })
     .def("solve_linear_system", &pStokesProblem::solve_linear_system)

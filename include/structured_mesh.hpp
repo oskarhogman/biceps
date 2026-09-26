@@ -17,6 +17,7 @@
  * along with Biceps. If not, see <https://www.gnu.org/licenses/>.
  */
 #pragma once
+#include <float_type.hpp>
 #include <vector>
 #include <Eigen/Dense>
 
@@ -137,7 +138,7 @@ private:
      * and vertical levels), and fills the matrix with corresponding values for each 
      * degree of freedom.
      * 
-     * @details The x and z coordinates are computed using `Eigen::VectorXd::LinSpaced()`. 
+     * @details The x and z coordinates are computed using `Eigen::VectorX<FloatType>::LinSpaced()`. 
      * The method iterates over all the points in the grid and assigns the corresponding 
      * coordinates (x, z) to the matrix `pmat` and `pmat_unit_box`. The matrix `pmat` 
      * stores the positions in the global mesh space, while `pmat_unit_box` stores 
@@ -466,14 +467,14 @@ public:
      * 
      * This matrix stores the reference (unit-box) coordinates of the mesh nodes before transformation.
      */
-    Eigen::MatrixXd pmat_unit_box;
+    Eigen::MatrixX<FloatType> pmat_unit_box;
 
     /**
      * @brief Node coordinates of the physical mesh.
      * 
      * Stores the actual coordinates of the mesh nodes in physical space after any transformations or extrusions.
      */
-    Eigen::MatrixXd pmat;
+    Eigen::MatrixX<FloatType> pmat;
 
     /**
      * @brief Connectivity matrix defining element-to-node relationships.
@@ -522,42 +523,42 @@ public:
      * 
      * Stores the unit tangent vectors for each edge in the mesh.
      */
-    Eigen::MatrixXd edge_tangents;
+    Eigen::MatrixX<FloatType> edge_tangents;
 
     /**
      * @brief Normal vectors of mesh edges.
      * 
      * Stores the unit normal vectors for each edge in the mesh, typically used for boundary conditions and flux computations.
      */
-    Eigen::MatrixXd edge_normals;
+    Eigen::MatrixX<FloatType> edge_normals;
 
     /**
      * @brief Tangent vectors at mesh vertices.
      * 
      * Stores the average tangent vectors at each vertex, computed based on surrounding edges.
      */
-    Eigen::MatrixXd vertex_tangents;
+    Eigen::MatrixX<FloatType> vertex_tangents;
 
     /**
      * @brief Normal vectors at mesh vertices.
      * 
      * Stores the average normal vectors at each vertex, computed based on surrounding edges.
      */
-    Eigen::MatrixXd vertex_normals;
+    Eigen::MatrixX<FloatType> vertex_normals;
 
     /**
      * @brief Tangent vectors at degrees of freedom (DOFs).
      * 
      * Stores the tangent vectors associated with each DOF, typically computed from surrounding mesh elements.
      */
-    Eigen::MatrixXd dof_tangents;
+    Eigen::MatrixX<FloatType> dof_tangents;
 
     /**
      * @brief Normal vectors at degrees of freedom (DOFs).
      * 
      * Stores the normal vectors associated with each DOF, typically computed from surrounding mesh elements.
      */
-    Eigen::MatrixXd dof_normals;
+    Eigen::MatrixX<FloatType> dof_normals;
 
     /**
      * @brief Mapping from vertex indices to surface vertex indices.
@@ -604,7 +605,7 @@ public:
      *       The method handles linear and quadratic degrees of freedom, adjusting the mesh based on the element 
      *       degree.
      */
-    void extrude_x(const Eigen::VectorXd &xvec_p1);
+    void extrude_x(const Eigen::VectorX<FloatType> &xvec_p1);
 
     /**
      * @brief Linearly extrudes the mesh in the x-direction between given bounds.
@@ -618,7 +619,7 @@ public:
      * After modifying the x-coordinates, the function recomputes boundary 
      * normals and tangents to ensure consistency.
      */
-    void extrude_x(double x0, double x1);
+    void extrude_x(FloatType x0, FloatType x1);
 
     /**
      * @brief Extrudes the mesh in the z-direction using provided bottom and top surface expressions.
@@ -634,8 +635,8 @@ public:
      * to update the mesh structure.
      */
     void extrude_z(
-        std::function<double (double)> zb_expr,
-        std::function<double (double)> zs_expr
+        std::function<FloatType (FloatType)> zb_expr,
+        std::function<FloatType (FloatType)> zs_expr
     );
 
     /**
@@ -652,8 +653,8 @@ public:
      * @param[in] zs_vec_p1 A vector containing the z-coordinates of the top surface at mesh vertices.
      */
     void extrude_z(
-        const Eigen::VectorXd &zb_vec_p1,
-        const Eigen::VectorXd &zs_vec_p1
+        const Eigen::VectorX<FloatType> &zb_vec_p1,
+        const Eigen::VectorX<FloatType> &zs_vec_p1
     );
     /**
      * @brief Extrudes the mesh in the z-direction using a specified top surface elevation.
@@ -665,7 +666,7 @@ public:
      *
      * @param[in] zs_vec_p1 A vector containing the z-coordinates of the top surface at mesh vertices.
      */
-    void extrude_z(const Eigen::VectorXd &zs_vec_p1);
+    void extrude_z(const Eigen::VectorX<FloatType> &zs_vec_p1);
 
     /**
      * @brief Extracts the indices of mesh cells that match a given identifier.
@@ -793,7 +794,7 @@ public:
      *    Jacobian determinant and its corresponding quadrature weight.
      * 5. Returns the total area by summing the contributions from all quadrature points in all cells.
      * 
-     * @return The computed total area of the mesh as a `double` value.
+     * @return The computed total area of the mesh as a `FloatType` value.
      */
-    double area();
+    FloatType area();
 };

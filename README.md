@@ -85,7 +85,7 @@ $ git clone https://github.com/andrelofgrenSU/biceps.git && cd biceps
 
 2. Configure and compile (on all available cores):
 ```console
-$ mkdir -p .build && cd .build && cmake .. -DCMAKE_BUILD_TYPE=release -DENABLE_PYTHON=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON && make -j$(cat /proc/cpuinfo | grep "core id" | sort | uniq | wc -l)
+$ mkdir -p .build && cd .build && cmake .. -DCMAKE_BUILD_TYPE=release -DENABLE_PYTHON=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON -DUSE_LONG_DOUBLE=OFF && make -j$(cat /proc/cpuinfo | grep "core id" | sort | uniq | wc -l)
 ```
 
 3. Build documentation (optional):
@@ -307,46 +307,46 @@ $ bin/biceps_demo
 #define ICE_DENSITY 910
 
 // Define domain and grid parameters
-double x0 = 0.0;  // Left end
-double x1 = 100.0;  // Right end
-double L = x1 - x0;  // Length of the domain
-double H = 1.0;  // Mean height of the domain
-double z0 = 0.1;  // Amplitude of surface undulation
+FloatType x0 = 0.0;  // Left end
+FloatType x1 = 100.0;  // Right end
+FloatType L = x1 - x0;  // Length of the domain
+FloatType H = 1.0;  // Mean height of the domain
+FloatType z0 = 0.1;  // Amplitude of surface undulation
 
-double A = 100.0;  // Ice softness parameter
-double n_i = 3.0;  // Glen exponent
-double eps_reg_2 = 1e-10;  // Regularization parameter
+FloatType A = 100.0;  // Ice softness parameter
+FloatType n_i = 3.0;  // Glen exponent
+FloatType eps_reg_2 = 1e-10;  // Regularization parameter
 int fssa_version = FSSA_NONE;  // No FSSA stabilization
-double fssa_param = 0;  // Stabilization parameter in FSSA 
+FloatType fssa_param = 0;  // Stabilization parameter in FSSA 
 
 int nx = 50;  // Number of elements in x-direction
 int nz = 5;  // Number of elements in z-direction
 int nt = 100;  // Number of time steps
-double dt = 35.0;  // Time step size
+FloatType dt = 35.0;  // Time step size
 int deg_u = 2;  // Polynomial degree for velocity field
 int deg_p = 1;  // Polynomial degree for pressure field
 int deg_h = 1;  // Polynomial degree for height field
 int gauss_precision = 5;  // Number of Gauss points in each direction per element
 int max_iter = 100;  // Maximum number of iterations for solver
-double stol = 1e-6;  // Convergence tolerance for solver
+FloatType stol = 1e-6;  // Convergence tolerance for solver
 int cell_type = MESH2D::TRIANGLE_LEFT;  // 2D mesh cell type
 
-double zb_expr(double x)
+FloatType zb_expr(FloatType x)
 {
     return 0.0;
 }
 
-double zs_expr(double x)
+FloatType zs_expr(FloatType x)
 {
-    return H + z0*cos(M_PI*x/L);
+    return H + z0*COS_FUNC(PI_CONST*x/L);
 }
 
-double force_x(double x, double z)
+FloatType force_x(FloatType x, FloatType z)
 {
     return 0.0;
 }
 
-double force_z(double x, double z)
+FloatType force_z(FloatType x, FloatType z)
 {
     return -1e-3*ICE_DENSITY*GRAVITY;
 }
@@ -368,10 +368,10 @@ int main(int argc, char *argv[])
     std::vector<int> sdofs_h = u_mesh_2d.extract_vertex_dof_inds(MESH2D::SURFACE_ID);
 
     // Extract surface coordinates
-    Eigen::MatrixX<double> spmat_u = u_mesh_2d.pmat(sdofs_u, Eigen::all);
-    Eigen::MatrixX<double> spmat_h = u_mesh_2d.pmat(sdofs_h, Eigen::all);
-    Eigen::VectorX<double> xs_vec = spmat_h(Eigen::all, 0);
-    Eigen::VectorX<double> zs_vec = spmat_h(Eigen::all, 1);
+    Eigen::MatrixX<FloatType> spmat_u = u_mesh_2d.pmat(sdofs_u, Eigen::all);
+    Eigen::MatrixX<FloatType> spmat_h = u_mesh_2d.pmat(sdofs_h, Eigen::all);
+    Eigen::VectorX<FloatType> xs_vec = spmat_h(Eigen::all, 0);
+    Eigen::VectorX<FloatType> zs_vec = spmat_h(Eigen::all, 1);
 
     // Project mesh to z=0
     spmat_u(Eigen::all, 1).array() = 0.0;
@@ -416,8 +416,8 @@ int main(int argc, char *argv[])
         psp.reset_system();
 
         // Extract velocity field solutions
-        Eigen::VectorX<double> ux_vec = psp.velocity_x().vals;
-        Eigen::VectorX<double> uz_vec = psp.velocity_z().vals;
+        Eigen::VectorX<FloatType> ux_vec = psp.velocity_x().vals;
+        Eigen::VectorX<FloatType> uz_vec = psp.velocity_z().vals;
         // Set free surface velocity
         ux_func.vals = ux_vec(sdofs_u);
         uz_func.vals = uz_vec(sdofs_u);

@@ -25,9 +25,9 @@ PoissonProblem::PoissonProblem(StructuredMesh &mesh) : mesh(mesh)
 {
     int deg = mesh.degree();
     n_dofs = mesh.nof_dofs();
-    lhs_mat = Eigen::SparseMatrix<double>(n_dofs, n_dofs);
-    rhs_vec = Eigen::VectorXd::Zero(n_dofs);
-    sol_vec = Eigen::VectorXd::Zero(n_dofs);
+    lhs_mat = Eigen::SparseMatrix<FloatType>(n_dofs, n_dofs);
+    rhs_vec = Eigen::VectorX<FloatType>::Zero(n_dofs);
+    sol_vec = Eigen::VectorX<FloatType>::Zero(n_dofs);
 
     int nnz_per_dof = (deg + 2)*(deg + 2);
     lhs_coeffs.reserve(n_dofs*nnz_per_dof);
@@ -40,14 +40,14 @@ void PoissonProblem::reset_system()
 }
 
 void PoissonProblem::assemble_stiffness_block(
-    std::function<double(double, double)> alpha,
-    std::function<double(double, double)> beta,
+    std::function<FloatType(FloatType, FloatType)> alpha,
+    std::function<FloatType(FloatType, FloatType)> beta,
     int gauss_precision
 ) {
     // Initialize variables for quadrature, basis functions, and geometry
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
     // Retrieve quadrature points and weights
@@ -60,10 +60,10 @@ void PoissonProblem::assemble_stiffness_block(
     );
 
     // Initialize matrices and vectors for stiffness assembly
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
-    Eigen::MatrixXd A_block = Eigen::MatrixXd::Zero(
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    Eigen::MatrixX<FloatType> A_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -82,9 +82,9 @@ void PoissonProblem::assemble_stiffness_block(
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             int wx = 2 * q;
             int wz = wx + 1;
-            double alpha_xz = alpha(qpoints_xz(q, 0), qpoints_xz(q, 1));
-            double beta_xz = beta(qpoints_xz(q, 0), qpoints_xz(q, 1));
-            double detJxW = fabs(detJ_rs(q)) * qweights(q);
+            FloatType alpha_xz = alpha(qpoints_xz(q, 0), qpoints_xz(q, 1));
+            FloatType beta_xz = beta(qpoints_xz(q, 0), qpoints_xz(q, 1));
+            FloatType detJxW = ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     A_block(i, j) += (
@@ -98,7 +98,7 @@ void PoissonProblem::assemble_stiffness_block(
         // Store computed block into the global matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                lhs_coeffs.push_back(Eigen::Triplet<double>(
+                lhs_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i), element(j), A_block(i, j)
                 ));
             }
@@ -109,13 +109,13 @@ void PoissonProblem::assemble_stiffness_block(
 }
 
 void PoissonProblem::assemble_mass_block(
-    std::function<double(double, double)> gamma,
+    std::function<FloatType(FloatType, FloatType)> gamma,
     int gauss_precision
 ) {
     // Initialize variables for quadrature, basis functions, and geometry
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
     // Retrieve quadrature points and weights
@@ -128,12 +128,12 @@ void PoissonProblem::assemble_mass_block(
     );
 
     // Initialize matrices and vectors for mass matrix assembly
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(
         2*qpoints_rs.rows(), mesh.dofs_per_cell()
     );
-    Eigen::MatrixXd M_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> M_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_cell(), mesh.dofs_per_cell()
     );
 
@@ -150,9 +150,9 @@ void PoissonProblem::assemble_mass_block(
 
         // Assemble mass matrix block for the element
         for (int q = 0; q < qpoints_rs.rows(); q++) {
-            double detJxWxGamma = gamma(
+            FloatType detJxWxGamma = gamma(
                 qpoints_xz(q, 0), qpoints_xz(q, 1)
-            ) * fabs(detJ_rs(q)) * qweights(q);
+            ) * ABS_FUNC(detJ_rs(q)) * qweights(q);
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
                 for (int j = 0; j < mesh.dofs_per_cell(); j++) {
                     M_block(i, j) += phi_rs(q, i) * phi_rs(q, j) * detJxWxGamma;
@@ -163,7 +163,7 @@ void PoissonProblem::assemble_mass_block(
         // Store computed block into the global matrix
         for (int i = 0; i < mesh.dofs_per_cell(); i++) {
             for (int j = 0; j < mesh.dofs_per_cell(); j++) {
-                lhs_coeffs.push_back(Eigen::Triplet<double>(
+                lhs_coeffs.push_back(Eigen::Triplet<FloatType>(
                     element(i), element(j), M_block(i, j)
                 ));
             }
@@ -174,15 +174,15 @@ void PoissonProblem::assemble_mass_block(
 }
 
 void PoissonProblem::assemble_robin_block(
-    std::function<double(double, double)> g_robin,
-    std::function<double(double, double)> a_robin,
-    std::function<double(double, double)> b_robin,
+    std::function<FloatType(FloatType, FloatType)> g_robin,
+    std::function<FloatType(FloatType, FloatType)> a_robin,
+    std::function<FloatType(FloatType, FloatType)> b_robin,
     int boundary_id,
     int gauss_precision
 ) {
     // Declare variables for geometry, quadrature, and basis functions
-    Eigen::MatrixXd node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
-    Eigen::VectorXd qweights, qpoints_r, detJ_r;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
+    Eigen::VectorX<FloatType> qweights, qpoints_r, detJ_r;
     Eigen::VectorXi edge_vi;
 
     // Retrieve quadrature points and weights for 1D integration
@@ -192,14 +192,14 @@ void PoissonProblem::assemble_robin_block(
     FEM1D::lagrange_basis(mesh.degree(), qpoints_r, phi_r, dphi_r);
 
     // Initialize matrices and vectors for mapping and transformations
-    qpoints_x = Eigen::MatrixXd::Zero(qpoints_r.rows(), 2);
-    detJ_r = Eigen::VectorXd::Zero(qpoints_r.rows());
-    dphi_x = Eigen::MatrixXd::Zero(
+    qpoints_x = Eigen::MatrixX<FloatType>::Zero(qpoints_r.rows(), 2);
+    detJ_r = Eigen::VectorX<FloatType>::Zero(qpoints_r.rows());
+    dphi_x = Eigen::MatrixX<FloatType>::Zero(
         2*qpoints_r.rows(), mesh.dofs_per_cell()
     );
 
     // Initialize a block matrix for mass computation
-    Eigen::MatrixXd M_block = Eigen::MatrixXd::Zero(
+    Eigen::MatrixX<FloatType> M_block = Eigen::MatrixX<FloatType>::Zero(
         mesh.dofs_per_edge(), mesh.dofs_per_edge()
     );
 
@@ -219,13 +219,13 @@ void PoissonProblem::assemble_robin_block(
         // Loop over the quadrature points
         for (int q = 0; q < qpoints_r.rows(); q++) {
             // Retrieve the Robin boundary function values at the quadrature point
-            double ar = a_robin(qpoints_x(q, 0), qpoints_x(q, 1));
-            double br = b_robin(qpoints_x(q, 0), qpoints_x(q, 1));
-            double gr = g_robin(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType ar = a_robin(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType br = b_robin(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType gr = g_robin(qpoints_x(q, 0), qpoints_x(q, 1));
 
             // Calculate a coefficient for the block matrix
-            double cr = ar/br;
-            double dFxWxCr = cr*fabs(detJ_r(q))*qweights(q);
+            FloatType cr = ar/br;
+            FloatType dFxWxCr = cr*ABS_FUNC(detJ_r(q))*qweights(q);
 
             // Update the block matrix for the mass term
             for (int i = 0; i < mesh.dofs_per_edge(); i++) {
@@ -238,7 +238,7 @@ void PoissonProblem::assemble_robin_block(
         // Fill the sparse matrix with the values from the block matrix
         for (int i = 0; i < mesh.dofs_per_edge(); i++) {
             for (int j = 0; j < mesh.dofs_per_edge(); j++) {
-                lhs_coeffs.push_back(Eigen::Triplet<double>(
+                lhs_coeffs.push_back(Eigen::Triplet<FloatType>(
                     edge_vi(i),
                     edge_vi(j),
                     M_block(i, j)
@@ -250,13 +250,13 @@ void PoissonProblem::assemble_robin_block(
 }
 
 void PoissonProblem::assemble_neumann_rhs(
-    std::function<double(double, double)> g_neumann,
+    std::function<FloatType(FloatType, FloatType)> g_neumann,
     int boundary_id,
     int gauss_precision
 ) {
     // Declare variables for geometry, quadrature, and basis functions
-    Eigen::MatrixXd node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
-    Eigen::VectorXd qweights, qpoints_r, detJ_r;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
+    Eigen::VectorX<FloatType> qweights, qpoints_r, detJ_r;
     Eigen::VectorXi edge_vi;
 
     // Retrieve quadrature points and weights for 1D integration
@@ -266,9 +266,9 @@ void PoissonProblem::assemble_neumann_rhs(
     FEM1D::lagrange_basis(mesh.degree(), qpoints_r, phi_r, dphi_r);
 
     // Initialize matrices and vectors for mapping and transformations
-    qpoints_x = Eigen::MatrixXd::Zero(qpoints_r.rows(), 2);
-    detJ_r = Eigen::VectorXd::Zero(qpoints_r.rows());
-    dphi_x = Eigen::MatrixXd::Zero(
+    qpoints_x = Eigen::MatrixX<FloatType>::Zero(qpoints_r.rows(), 2);
+    detJ_r = Eigen::VectorX<FloatType>::Zero(qpoints_r.rows());
+    dphi_x = Eigen::MatrixX<FloatType>::Zero(
         2*qpoints_r.rows(), mesh.dofs_per_cell()
     );
 
@@ -288,10 +288,10 @@ void PoissonProblem::assemble_neumann_rhs(
         // Loop over the quadrature points
         for (int q = 0; q < qpoints_r.rows(); q++) {
             // Retrieve the Neumann boundary condition value at the quadrature point
-            double gn = g_neumann(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType gn = g_neumann(qpoints_x(q, 0), qpoints_x(q, 1));
 
             // Compute the weighted value at this quadrature point
-            double detJxWxGn = gn*fabs(detJ_r(q))*qweights(q);
+            FloatType detJxWxGn = gn*ABS_FUNC(detJ_r(q))*qweights(q);
 
             // Add contribution to the right-hand side vector using the basis functions
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
@@ -302,12 +302,12 @@ void PoissonProblem::assemble_neumann_rhs(
 }
 
 void PoissonProblem::assemble_force_rhs(
-    std::function<double(double, double)> f, int gauss_precision
+    std::function<FloatType(FloatType, FloatType)> f, int gauss_precision
 ) {
     // Declare variables for geometry, quadrature, and basis functions
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element;
 
     // Retrieve quadrature points and weights for 2D integration
@@ -321,9 +321,9 @@ void PoissonProblem::assemble_force_rhs(
     );
 
     // Initialize matrices and vectors for mapping and transformations
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Loop over each element in the mesh
     for (int k = 0; k < mesh.cmat.rows(); k++) {
@@ -340,9 +340,9 @@ void PoissonProblem::assemble_force_rhs(
         // Loop over the quadrature points
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             // Compute the weighted value of the function f at the quadrature point
-            double detJxWxf = f(
+            FloatType detJxWxf = f(
                 qpoints_xz(q, 0), qpoints_xz(q, 1)
-            ) * fabs(detJ_rs(q)) * qweights(q);
+            ) * ABS_FUNC(detJ_rs(q)) * qweights(q);
 
             // Add contribution to the right-hand side vector using the basis functions
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
@@ -356,9 +356,9 @@ void PoissonProblem::assemble_force_rhs(
     FEMFunction2D &f, int gauss_precision
 ) {
     // Declare variables for geometry, quadrature, basis functions, and force evaluation
-    Eigen::MatrixXd node_coords_v, qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> node_coords_v, qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs, f_cell;
+    Eigen::VectorX<FloatType> qweights, detJ_rs, f_cell;
     Eigen::VectorXi element;
 
     // Retrieve quadrature points and weights for integration in 2D
@@ -372,9 +372,9 @@ void PoissonProblem::assemble_force_rhs(
     );
 
     // Initialize matrices and vectors for mappings and transformations
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2*qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Loop over each element in the mesh
     for (int k = 0; k < mesh.cmat.rows(); k++) {
@@ -394,8 +394,8 @@ void PoissonProblem::assemble_force_rhs(
         // Loop over the quadrature points
         for (int q = 0; q < qpoints_rs.rows(); q++) {
             // Compute the weighted value of the force function f at the quadrature point
-            double detJxWxf = (
-                f_cell.dot(phi_rs(q, Eigen::all)) * fabs(detJ_rs(q)) * qweights(q)
+            FloatType detJxWxf = (
+                f_cell.dot(phi_rs(q, Eigen::all)) * ABS_FUNC(detJ_rs(q)) * qweights(q)
             );
 
             // Add contribution to the right-hand side vector (rhs_vec) using the basis functions
@@ -407,14 +407,14 @@ void PoissonProblem::assemble_force_rhs(
 }
 
 void PoissonProblem::assemble_robin_rhs(
-    std::function<double(double, double)> b_robin,
-    std::function<double(double, double)> g_robin,
+    std::function<FloatType(FloatType, FloatType)> b_robin,
+    std::function<FloatType(FloatType, FloatType)> g_robin,
     int boundary_id,
     int gauss_precision
 ) {
     // Declare variables for geometry, quadrature, and basis functions
-    Eigen::MatrixXd node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
-    Eigen::VectorXd qweights, qpoints_r, detJ_r;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_x, phi_r, dphi_r, dphi_x;
+    Eigen::VectorX<FloatType> qweights, qpoints_r, detJ_r;
     Eigen::VectorXi edge_vi;
 
     // Retrieve quadrature points and weights using Gauss-Legendre quadrature
@@ -426,9 +426,9 @@ void PoissonProblem::assemble_robin_rhs(
     );
 
     // Initialize matrices and vectors for mapping and transformations
-    qpoints_x = Eigen::MatrixXd::Zero(qpoints_r.rows(), 2);
-    detJ_r = Eigen::VectorXd::Zero(qpoints_r.rows());
-    dphi_x = Eigen::MatrixXd::Zero(2*qpoints_r.rows(), mesh.dofs_per_cell());
+    qpoints_x = Eigen::MatrixX<FloatType>::Zero(qpoints_r.rows(), 2);
+    detJ_r = Eigen::VectorX<FloatType>::Zero(qpoints_r.rows());
+    dphi_x = Eigen::MatrixX<FloatType>::Zero(2*qpoints_r.rows(), mesh.dofs_per_cell());
 
     // Extract the edges of the mesh corresponding to the boundary ID
     std::vector<int> surf_edge_inds = mesh.extract_edge_inds(boundary_id);
@@ -448,14 +448,14 @@ void PoissonProblem::assemble_robin_rhs(
         // Loop over the quadrature points for numerical integration
         for (int q = 0; q < qpoints_r.rows(); q++) {
             // Evaluate the Robin boundary conditions at the current quadrature point
-            double br = b_robin(qpoints_x(q, 0), qpoints_x(q, 1));
-            double gr = g_robin(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType br = b_robin(qpoints_x(q, 0), qpoints_x(q, 1));
+            FloatType gr = g_robin(qpoints_x(q, 0), qpoints_x(q, 1));
 
             // Compute the coefficient c based on Robin condition (g/b)
-            double cr = gr/br;
+            FloatType cr = gr/br;
 
             // Calculate the weighted contribution for the right-hand side (rhs) vector
-            double detJxWxCr = cr * fabs(detJ_r(q)) * qweights(q);
+            FloatType detJxWxCr = cr * ABS_FUNC(detJ_r(q)) * qweights(q);
 
             // Accumulate the contribution for each basis function at the quadrature points
             for (int i = 0; i < mesh.dofs_per_cell(); i++) {
@@ -471,7 +471,7 @@ void PoissonProblem::commit_lhs_mat()
 }
 
 void PoissonProblem::apply_dirichlet_bc(
-    std::function<double(double, double)> bc_func, int boundary_part
+    std::function<FloatType(FloatType, FloatType)> bc_func, int boundary_part
 ) {
     // Extract the DOFs for free (interior) and fixed (boundary) parts
     free_dofs = mesh.extract_dof_inds(MESH2D::DOMAIN_ID & ~boundary_part);
@@ -482,13 +482,13 @@ void PoissonProblem::apply_dirichlet_bc(
     lhs_mat_fixed = lhs_mat.extract_block(free_dofs, fixed_dofs);
 
     // Initialize the boundary condition vector for the fixed DOFs
-    bc_vec = Eigen::VectorXd::Zero(fixed_dofs.size());
+    bc_vec = Eigen::VectorX<FloatType>::Zero(fixed_dofs.size());
 
     // Loop through fixed DOFs to apply the Dirichlet boundary conditions
     int i = 0;
     for (int dof: fixed_dofs) {
-        double x = mesh.pmat(dof, 0);
-        double z = mesh.pmat(dof, 1);
+        FloatType x = mesh.pmat(dof, 0);
+        FloatType z = mesh.pmat(dof, 1);
         bc_vec(i++) = bc_func(x, z); // Apply the boundary condition
     }
 
@@ -499,7 +499,7 @@ void PoissonProblem::apply_dirichlet_bc(
 void PoissonProblem::solve_linear_system()
 {
     // Initialize sparse LU solver for the linear system
-    Eigen::SparseLU<Eigen::SparseMatrix<double>> sp_solver;
+    Eigen::SparseLU<Eigen::SparseMatrix<FloatType>> sp_solver;
     sp_solver.analyzePattern(lhs_mat_free);
     sp_solver.factorize(lhs_mat_free);
 

@@ -19,7 +19,7 @@
 #include <interval_mesh.hpp>
 #include <enums.hpp>
 
-IntervalMesh::IntervalMesh(double x0, double x1, int n_cells, int degree) :
+IntervalMesh::IntervalMesh(FloatType x0, FloatType x1, int n_cells, int degree) :
     _degree(degree), _nof_cells(n_cells)
 {
     if (n_cells < 1)
@@ -33,7 +33,7 @@ IntervalMesh::IntervalMesh(double x0, double x1, int n_cells, int degree) :
     _hl = _degree * n_cells;
 
     // Initialize matrices for point locations, cell-to-DOF mapping, and degree-of-freedom IDs
-    pmat = Eigen::MatrixXd::Zero(nof_dofs(), 2);
+    pmat = Eigen::MatrixX<FloatType>::Zero(nof_dofs(), 2);
     cmat = Eigen::MatrixXi::Zero(nof_cells(), dofs_per_cell());
     dimat = Eigen::VectorXi::Zero(nof_dofs());
 
@@ -43,9 +43,9 @@ IntervalMesh::IntervalMesh(double x0, double x1, int n_cells, int degree) :
         pmat(di, 0) = x0 + (x1 - x0) * di / (nof_dofs() - 1);
 
         // Mark nodes based on the point positions
-        if (fabs(pmat(di, 0) - x0) < 1e-10)
+        if (ABS_FUNC(pmat(di, 0) - x0) < 1e-10)
             dimat(di) = MESH1D::WEST_ID;  // Left boundary
-        else if (fabs(pmat(di, 0) - x1) < 1e-10)
+        else if (ABS_FUNC(pmat(di, 0) - x1) < 1e-10)
             dimat(di) = MESH1D::EAST_ID;  // Right boundary
         else
             dimat(di) = MESH1D::INTERIOR_ID;  // Interior point
@@ -66,7 +66,7 @@ void IntervalMesh::compute_vertex_dof_inds() {
         vertex_dof_inds.push_back(vi);  // Store the vertex DOF index
 }
 
-IntervalMesh::IntervalMesh(const Eigen::MatrixXd &pmat, int degree)
+IntervalMesh::IntervalMesh(const Eigen::MatrixX<FloatType> &pmat, int degree)
     : _degree(degree), pmat(pmat)
 {
     _nof_cells = (pmat.rows() - 1) / degree;
@@ -76,14 +76,14 @@ IntervalMesh::IntervalMesh(const Eigen::MatrixXd &pmat, int degree)
     dimat = Eigen::VectorXi::Zero(nof_dofs());
 
     // Extract the first and last point coordinates from the point matrix
-    double x0 = pmat(0, 0);
-    double x1 = pmat(Eigen::last, 0);
+    FloatType x0 = pmat(0, 0);
+    FloatType x1 = pmat(Eigen::last, 0);
 
     // Mark nodes based on the point positions
     for (int di = 0; di < nof_dofs(); di++) {
-        if (fabs(pmat(di, 0) - x0) < 1e-10)
+        if (ABS_FUNC(pmat(di, 0) - x0) < 1e-10)
             dimat(di) = MESH1D::WEST_ID;  // Left boundary
-        else if (fabs(pmat(di, 0) - x1) < 1e-10)
+        else if (ABS_FUNC(pmat(di, 0) - x1) < 1e-10)
             dimat(di) = MESH1D::EAST_ID;  // Right boundary
         else
             dimat(di) = MESH1D::INTERIOR_ID;  // Interior point

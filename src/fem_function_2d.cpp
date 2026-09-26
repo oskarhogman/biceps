@@ -21,7 +21,7 @@
 FEMFunction2D::FEMFunction2D(StructuredMesh &mesh) : mesh(mesh)
 {
     mass_mat_is_assembled = false;
-    vals = Eigen::VectorXd::Zero(mesh.nof_dofs());
+    vals = Eigen::VectorX<FloatType>::Zero(mesh.nof_dofs());
 }
 
 void FEMFunction2D::assemble_mass_matrix()
@@ -30,26 +30,26 @@ void FEMFunction2D::assemble_mass_matrix()
     mass_mat_is_assembled = true;
 }
 
-void FEMFunction2D::set_mass_matrix(Eigen::SparseMatrix<double> &M_sp)
+void FEMFunction2D::set_mass_matrix(Eigen::SparseMatrix<FloatType> &M_sp)
 {
     M = M_sp;
     mass_mat_is_assembled = true;
 }
 
-Eigen::SparseMatrix<double> FEMFunction2D::mass_matrix() {
+Eigen::SparseMatrix<FloatType> FEMFunction2D::mass_matrix() {
     return M;
 }
 
-void FEMFunction2D::assign(std::function<double(double, double)> func)
+void FEMFunction2D::assign(std::function<FloatType(FloatType, FloatType)> func)
 {
     for (int i = 0; i < mesh.nof_dofs(); i++) {
-        double x = mesh.pmat(i, 0);
-        double z = mesh.pmat(i, 1);
+        FloatType x = mesh.pmat(i, 0);
+        FloatType z = mesh.pmat(i, 1);
         vals(i) = func(x, z);
     }
 }
 
-void FEMFunction2D::assign(const Eigen::VectorXd &vec)
+void FEMFunction2D::assign(const Eigen::VectorX<FloatType> &vec)
 {
     if (vec.size() != mesh.nof_dofs()) {
         throw std::invalid_argument("FEMFunction2D::assign: Size mismatch vec.size() != f.mesh.nof_dofs()");
@@ -68,16 +68,16 @@ void FEMFunction2D::assign(const FEMFunction2D &f)
 FEMFunction2D FEMFunction2D::diff_x_interp()
 {
     // Matrices and vectors for quadrature points, shape functions, and derivatives
-    Eigen::MatrixXd node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd detJ_rs;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
+    Eigen::VectorX<FloatType> detJ_rs;
     Eigen::VectorXi element;
     FEMFunction2D u_diff(mesh); // Function to store the derivative values
 
     // Retrieve reference element quadrature points
     qpoints_rs = FEM2D::reference_element_points_rs(mesh.cell_type(), mesh.degree());
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Compute Lagrange basis functions and their derivatives at quadrature points
     FEM2D::lagrange_basis(
@@ -88,7 +88,7 @@ FEMFunction2D FEMFunction2D::diff_x_interp()
     );
 
     // Initialize derivative values and a counter for duplicate degrees of freedom
-    Eigen::VectorXd diff_vals = Eigen::VectorXd::Zero(mesh.nof_dofs());
+    Eigen::VectorX<FloatType> diff_vals = Eigen::VectorX<FloatType>::Zero(mesh.nof_dofs());
     Eigen::VectorXi duplicate_dof_count = Eigen::VectorXi::Zero(mesh.nof_dofs());
 
     // Loop over each cell in the mesh
@@ -121,16 +121,16 @@ FEMFunction2D FEMFunction2D::diff_x_interp()
 FEMFunction2D FEMFunction2D::diff_z_interp()
 {
     // Matrices and vectors for quadrature points, shape functions, and derivatives
-    Eigen::MatrixXd node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd detJ_rs;
+    Eigen::MatrixX<FloatType> node_coords, qpoints_rs, qpoints_xz, phi_rs, dphi_rs, dphi_xz;
+    Eigen::VectorX<FloatType> detJ_rs;
     Eigen::VectorXi element;
     FEMFunction2D u_diff(mesh); // Function to store the derivative values
 
     // Retrieve reference element quadrature points
     qpoints_rs = FEM2D::reference_element_points_rs(mesh.cell_type(), mesh.degree());
-    detJ_rs = Eigen::VectorXd::Zero(qpoints_rs.rows());
-    qpoints_xz = Eigen::MatrixXd::Zero(qpoints_rs.rows(), 2);
-    dphi_xz = Eigen::MatrixXd::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
+    detJ_rs = Eigen::VectorX<FloatType>::Zero(qpoints_rs.rows());
+    qpoints_xz = Eigen::MatrixX<FloatType>::Zero(qpoints_rs.rows(), 2);
+    dphi_xz = Eigen::MatrixX<FloatType>::Zero(2 * qpoints_rs.rows(), mesh.dofs_per_cell());
 
     // Compute Lagrange basis functions and their derivatives at quadrature points
     FEM2D::lagrange_basis(
@@ -141,7 +141,7 @@ FEMFunction2D FEMFunction2D::diff_z_interp()
     );
 
     // Initialize derivative values and a counter for duplicate degrees of freedom
-    Eigen::VectorXd diff_vals = Eigen::VectorXd::Zero(mesh.nof_dofs());
+    Eigen::VectorX<FloatType> diff_vals = Eigen::VectorX<FloatType>::Zero(mesh.nof_dofs());
     Eigen::VectorXi duplicate_dof_count = Eigen::VectorXi::Zero(mesh.nof_dofs());
 
     // Loop over each cell in the mesh
@@ -178,14 +178,14 @@ FEMFunction2D FEMFunction2D::diff_x_proj()
     int deg = mesh.degree(); // Polynomial degree of the finite element space
 
     // Assemble the mass matrix and stiffness matrix in the x-direction
-    Eigen::SparseMatrix<double> M = FEM2D::assemble_mass_matrix(mesh, 2*deg + 1);
-    Eigen::SparseMatrix<double> Ax = FEM2D::assemble_stiffness_x_matrix(mesh, 2*deg + 1);
+    Eigen::SparseMatrix<FloatType> M = FEM2D::assemble_mass_matrix(mesh, 2*deg + 1);
+    Eigen::SparseMatrix<FloatType> Ax = FEM2D::assemble_stiffness_x_matrix(mesh, 2*deg + 1);
 
     // Compute the right-hand side vector for the system
-    Eigen::VectorXd rhs_vec = Ax * vals;
+    Eigen::VectorX<FloatType> rhs_vec = Ax * vals;
 
     // Solve the linear system M * u_diff = rhs_vec using a sparse LU decomposition
-    Eigen::SparseLU<Eigen::SparseMatrix<double>> sp_solver;
+    Eigen::SparseLU<Eigen::SparseMatrix<FloatType>> sp_solver;
     sp_solver.analyzePattern(M);
     sp_solver.factorize(M);
     u_diff.vals = sp_solver.solve(rhs_vec);
@@ -200,14 +200,14 @@ FEMFunction2D FEMFunction2D::diff_z_proj()
     int deg = mesh.degree(); // Polynomial degree of the finite element space
 
     // Assemble the mass matrix and stiffness matrix in the z-direction
-    Eigen::SparseMatrix<double> M = FEM2D::assemble_mass_matrix(mesh, 2*deg + 1);
-    Eigen::SparseMatrix<double> Az = FEM2D::assemble_stiffness_z_matrix(mesh, 2*deg + 1);
+    Eigen::SparseMatrix<FloatType> M = FEM2D::assemble_mass_matrix(mesh, 2*deg + 1);
+    Eigen::SparseMatrix<FloatType> Az = FEM2D::assemble_stiffness_z_matrix(mesh, 2*deg + 1);
 
     // Compute the right-hand side vector for the system
-    Eigen::VectorXd rhs_vec = Az * vals;
+    Eigen::VectorX<FloatType> rhs_vec = Az * vals;
 
     // Solve the linear system M * u_diff = rhs_vec using a sparse LU decomposition
-    Eigen::SparseLU<Eigen::SparseMatrix<double>> sp_solver;
+    Eigen::SparseLU<Eigen::SparseMatrix<FloatType>> sp_solver;
     sp_solver.analyzePattern(M);
     sp_solver.factorize(M);
     u_diff.vals = sp_solver.solve(rhs_vec);
@@ -215,40 +215,40 @@ FEMFunction2D FEMFunction2D::diff_z_proj()
     return u_diff;
 }
 
-Eigen::VectorXd FEMFunction2D::eval_cell(int ci)
+Eigen::VectorX<FloatType> FEMFunction2D::eval_cell(int ci)
 {
     return vals(mesh.cmat.row(ci), Eigen::all);
 }
 
-Eigen::VectorXd FEMFunction2D::eval_edge(int ei)
+Eigen::VectorX<FloatType> FEMFunction2D::eval_edge(int ei)
 {
     return vals(mesh.emat.row(ei), Eigen::all);
 }
 
-Eigen::MatrixXd FEMFunction2D::extract_vertex_subvec(int domain_id)
+Eigen::MatrixX<FloatType> FEMFunction2D::extract_vertex_subvec(int domain_id)
 {
     std::vector<int> subdomain_inds = mesh.extract_vertex_dof_inds(domain_id);
-    Eigen::MatrixXd vector_xzf(subdomain_inds.size(), 3);
+    Eigen::MatrixX<FloatType> vector_xzf(subdomain_inds.size(), 3);
     vector_xzf(Eigen::all, Eigen::seq(0, 1)) = mesh.pmat(subdomain_inds, Eigen::all);
     vector_xzf(Eigen::all, 2) = vals(subdomain_inds);
     return vector_xzf;
 }
 
-Eigen::MatrixXd FEMFunction2D::extract_dof_subvec(int domain_id)
+Eigen::MatrixX<FloatType> FEMFunction2D::extract_dof_subvec(int domain_id)
 {
     std::vector<int> subdomain_inds = mesh.extract_dof_inds(domain_id);
-    Eigen::MatrixXd vector_xzf(subdomain_inds.size(), 3);
+    Eigen::MatrixX<FloatType> vector_xzf(subdomain_inds.size(), 3);
     vector_xzf(Eigen::all, Eigen::seq(0, 1)) = mesh.pmat(subdomain_inds, Eigen::all);
     vector_xzf(Eigen::all, 2) = vals(subdomain_inds);
     return vector_xzf;
 }
 
 // TODO: implement this!
-double FEMFunction2D::operator()(double x, double z)
+FloatType FEMFunction2D::operator()(FloatType x, FloatType z)
 {
-    Eigen::MatrixXd qpoints_rs, qpoints_xz,
+    Eigen::MatrixX<FloatType> qpoints_rs, qpoints_xz,
         phi_rs, dphi_rs, dphi_xz;
-    Eigen::VectorXd qweights, detJ_rs;
+    Eigen::VectorX<FloatType> qweights, detJ_rs;
     Eigen::VectorXi element_v;
     return 0.0;
 }
@@ -283,28 +283,28 @@ FEMFunction2D FEMFunction2D::operator*(const FEMFunction2D &f)
     return func;
 }
 
-FEMFunction2D FEMFunction2D::operator+(double val)
+FEMFunction2D FEMFunction2D::operator+(FloatType val)
 {
     FEMFunction2D func(mesh);
     func.vals = this->vals.array() + val;
     return func;
 }
 
-FEMFunction2D FEMFunction2D::operator-(double val)
+FEMFunction2D FEMFunction2D::operator-(FloatType val)
 {
     FEMFunction2D func(mesh);
     func.vals = this->vals.array() - val;
     return func;
 }
 
-FEMFunction2D FEMFunction2D::operator*(double val)
+FEMFunction2D FEMFunction2D::operator*(FloatType val)
 {
     FEMFunction2D func(mesh);
     func.vals = this->vals * val;
     return func;
 }
 
-double FEMFunction2D::L2_norm()
+FloatType FEMFunction2D::L2_norm()
 {
-    return sqrt(FEM2D::inner(vals, M, vals));
+    return SQRT_FUNC(FEM2D::inner(vals, M, vals));
 }

@@ -35,12 +35,12 @@
  */
 class FEMFunction1D {
 private:
-    Eigen::SparseMatrix<double> M; /**< Sparse mass matrix */
+    Eigen::SparseMatrix<FloatType> M; /**< Sparse mass matrix */
     bool mass_mat_is_assembled = false; /**< Flag indicating whether mass matrix is assembled */
 
 public:
     IntervalMesh &mesh; /**< Reference to the 1D interval mesh */
-    Eigen::VectorXd vals; /**< Vector of function values at each degree of freedom (DOF) */
+    Eigen::VectorX<FloatType> vals; /**< Vector of function values at each degree of freedom (DOF) */
 
     /**
      * @brief Constructor for FEMFunction1D.
@@ -58,14 +58,14 @@ public:
      * 
      * @param[in] func The function to assign to the FEMFunction1D.
      */
-    void assign(std::function<double(double, double)> func);
+    void assign(std::function<FloatType(FloatType, FloatType)> func);
 
     /**
      * @brief Assigns a vector of values to the FEMFunction1D object.
      * 
      * @param[in] vec The vector of values to assign.
      */
-    void assign(const Eigen::VectorXd &vec);
+    void assign(const Eigen::VectorX<FloatType> &vec);
 
     /**
      * @brief Assembles the mass matrix for the FEM function.
@@ -76,7 +76,7 @@ public:
      * @brief Set preassembled mass matrix for the FEM function, used for L2 norm calculation
      * @param[in] M The mass matrix in sparse format
      */
-    void set_mass_matrix(Eigen::SparseMatrix<double> &M);
+    void set_mass_matrix(Eigen::SparseMatrix<FloatType> &M);
 
     /**
      * @brief Integrates the function over a specified number of Gauss points.
@@ -84,7 +84,7 @@ public:
      * @param[in] gp The number of Gauss points for integration.
      * @return The result of the integration.
      */
-    double integrate(int gp);
+    FloatType integrate(int gp);
 
     /**
      * @brief Evaluates the function over a specified cell.
@@ -92,7 +92,7 @@ public:
      * @param[in] cell_index The index of the cell to evaluate.
      * @return Vector of function values for the cell.
      */
-    Eigen::VectorXd eval_cell(int cell_index);
+    Eigen::VectorX<FloatType> eval_cell(int cell_index);
     
     /**
      * @brief Extracts a subvector corresponding to a vertex.
@@ -100,7 +100,7 @@ public:
      * @param[in] domain_id The domain ID for the vertex.
      * @return Matrix of extracted subvector values.
      */
-    Eigen::MatrixXd extract_vertex_subvec(int domain_id);
+    Eigen::MatrixX<FloatType> extract_vertex_subvec(int domain_id);
     
     /**
      * @brief Extracts a subvector corresponding to a degree of freedom (DOF).
@@ -108,14 +108,14 @@ public:
      * @param[in] domain_id The domain ID for the DOF.
      * @return Matrix of extracted subvector values.
      */
-    Eigen::MatrixXd extract_dof_subvec(int domain_id);
+    Eigen::MatrixX<FloatType> extract_dof_subvec(int domain_id);
 
     /**
      * @brief Returns the mass matrix of the FEM function.
      * 
      * @return The sparse mass matrix.
      */
-    Eigen::SparseMatrix<double> mass_matrix();
+    Eigen::SparseMatrix<FloatType> mass_matrix();
 
     /**
     * @brief Computes the L2 norm of the function.
@@ -127,9 +127,9 @@ public:
     * 
     * @throws std::runtime_error if the mass matrix has not been assembled.
     * 
-    * @return The L2 norm of the function as a value of type `double`.
+    * @return The L2 norm of the function as a value of type `FloatType`.
     */
-    double L2_norm();
+    FloatType L2_norm();
 
     /**
      * @brief Adds another FEM function to the current FEM function and returns the result.
@@ -143,7 +143,7 @@ public:
      * @return A new FEM function representing the result of the element-wise addition of the current
      *         FEM function and the input FEM function `f`.
      */
-    FEMFunction1D operator+(double val);
+    FEMFunction1D operator+(FloatType val);
 
     /**
      * @brief Subtracts a constant value from the FEM function and returns the result.
@@ -155,7 +155,7 @@ public:
      * 
      * @return A new FEM function representing the result of subtracting `val` from the current function.
      */
-    FEMFunction1D operator-(double val);
+    FEMFunction1D operator-(FloatType val);
 
     /**
      * @brief Multiplies the FEM function by a constant value and returns the result.
@@ -167,7 +167,7 @@ public:
      * 
      * @return A new FEM function representing the result of multiplying the current function by `val`.
      */
-    FEMFunction1D operator*(double val);
+    FEMFunction1D operator*(FloatType val);
 
     /**
      * @brief Adds another FEM function to the current FEM function and returns the result.

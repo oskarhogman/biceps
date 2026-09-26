@@ -7,7 +7,7 @@ TimeIntegrator::TimeIntegrator(
     // Empty constructor
 }
 
-Eigen::VectorXd TimeIntegrator::step_explicit(double dt)
+Eigen::VectorX<FloatType> TimeIntegrator::step_explicit(FloatType dt)
 {
     // Solve the pStokes problem
     psp.solve_nonlinear_system();
@@ -43,11 +43,11 @@ Eigen::VectorXd TimeIntegrator::step_explicit(double dt)
     fsp.reset_system();
 
     // Calculate change in surface heights
-    Eigen::VectorXd dh_vec = fsp.zs_vec - h0_fem_func.vals;
+    Eigen::VectorX<FloatType> dh_vec = fsp.zs_vec - h0_fem_func.vals;
     return dh_vec;
 }
 
-Eigen::VectorXd TimeIntegrator::step_simplicit(double dt)
+Eigen::VectorX<FloatType> TimeIntegrator::step_simplicit(FloatType dt)
 {
     // Solve the pStokes problem
     psp.solve_nonlinear_system();
@@ -83,11 +83,11 @@ Eigen::VectorXd TimeIntegrator::step_simplicit(double dt)
     fsp.reset_system();
 
     // Calculate change in surface heights
-    Eigen::VectorXd dh_vec = fsp.zs_vec - h0_fem_func.vals;
+    Eigen::VectorX<FloatType> dh_vec = fsp.zs_vec - h0_fem_func.vals;
     return dh_vec;
 }
 
-void TimeIntegrator::extrude_mesh_z(const Eigen::VectorXd &zs_vec)
+void TimeIntegrator::extrude_mesh_z(const Eigen::VectorX<FloatType> &zs_vec)
 {
     psp.u_mesh.extrude_z(zs_vec);
     psp.p_mesh.extrude_z(zs_vec);
